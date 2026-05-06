@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 2: Detectar Errores | Secure Compose Master</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>🐛 Detectar y Corregir Errores</h1>
+      <span class="badge">Nivel 1</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="index.html" class="btn secondary">← Panel</a>
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
+      <button class="tab-btn" data-tab="herramientas">🛠️ Validadores</button>
+      <button class="tab-btn" data-tab="reto">✏️ Reto</button>
+      <button class="tab-btn" data-tab="auditoria">🔍 Checklist</button>
+      <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+    </div>
+
+    <div id="teoria" class="panel active">
+      <div class="card">
+        <h2>⚠️ Errores que más se repiten en YAML</h2>
+        <p>YAML es estricto con la estructura. Un solo espacio de más o un tab mal colocado rompe todo el parseo.</p>
+        <table>
+          <tr><th>Error</th><th>Causa</th><th>Ejemplo correcto</th></tr>
+          <tr><td>Mezclar tabs y espacios</td><td>El parser falla al encontrar `\t`</td><td>Usa solo 2 espacios por nivel</td></tr>
+          <tr><td>Falta espacio tras <code>:</code></td><td><code>clavevalor</code> no se parsea</td><td><code>clave: valor</code></td></tr>
+          <tr><td>Booleanos accidentales</td><td><code>yes/no/on/off</code> → true/false</td><td><code>pais: "NO"</code></td></tr>
+          <tr><td>Versiones como número</td><td><code>version: 3.8</code> → float 3.8</td><td><code>version: "3.8"</code> u omitir</td></tr>
+          <tr><td>Listas mal alineadas</td><td>Los <code>-</code> no comparten nivel</td><td>Alinea todos los guiones verticalmente</td></tr>
+          <tr><td>Indentación inconsistente</td><td>Hijos al mismo nivel con distinta sangría</td><td>Mantén bloques paralelos iguales</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="herramientas" class="panel">
+      <div class="card">
+        <h2>🛠️ Herramientas de Validación</h2>
+        <p>Antes de aplicar un YAML, valida su estructura. Cada herramienta cubre un nivel distinto:</p>
+        <div class="grid-2">
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>🔤 Sintaxis pura</h3>
+            <code>yamllint archivo.yml</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Detecta tabs, indentación, espacios tras <code>:</code> y estructura básica.</p>
+          </div>
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>🔄 Depurar estructura</h3>
+            <code>yq -o=json archivo.yml</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Convierte a JSON. Si falla aquí, la jerarquía está rota.</p>
+          </div>
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>🐳 Docker Compose</h3>
+            <code>docker compose config --quiet</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Valida claves específicas de Compose, puertos, redes y volúmenes.</p>
+          </div>
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>☸️ Kubernetes</h3>
+            <code>kubectl apply -f manifest.yml --dry-run=client</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Valida contra el esquema local sin contactar al cluster.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="reto" class="panel">
+      <div class="card">
+        <h2>🎯 Reto: Corrige el Nginx Roto</h2>
+        <p>Este <code>docker-compose.yml</code> contiene <strong>al menos 6 errores</strong> (sintaxis, tipos y buenas prácticas). Encuéntralos y corrígelos.</p>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor" rows="10" placeholder="El código roto se cargará aquí..."></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
+        </div>
+        <div id="hint-box" class="hint-box"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="auditoria" class="panel">
+      <div class="card">
+        <h2>🔍 Checklist de Auditoría Manual</h2>
+        <p>Antes de dar por válido un YAML, pasa por estos puntos:</p>
+        <ul style="list-style:none; padding:0;">
+          <li>✅ No hay tabuladores (`\t`). Solo espacios.</li>
+          <li>✅ Cada `:` lleva exactamente un espacio a la derecha.</li>
+          <li>✅ Las listas usan `- ` (guión + espacio) alineados.</li>
+          <li>✅ Valores como `yes`, `on`, `off`, `true` llevan comillas si deben ser strings.</li>
+          <li>✅ No se mezclan sintaxis de mapa y lista en la misma clave.</li>
+          <li>✅ `depends_on` usa estructura de mapa si lleva `condition:`.</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>En tu terminal:</strong> ejecuta <code>docker compose config --quiet</code> sobre tu archivo. Si devuelve vacío, es válido.</p>
+      </div>
+    </div>
+
+    <div id="resultados" class="panel">
+      <div class="card">
+        <h2>📊 Tu Progreso</h2>
+        <p>Ejercicios completados: <strong id="completed-count">0</strong> / 10</p>
+        <p>XP acumulada: <strong id="xp-count">0</strong></p>
+        <div style="margin-top:1rem; padding:1rem; background:var(--surface-alt); border-radius:8px;">
+          <p>🎯 <strong>Siguiente meta:</strong> Corrige 3 YAMLs rotos para desbloquear el badge <em>"Auditor Jr."</em>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // Cargar ejercicio base del PDF (Ejercicio 1)
+    document.addEventListener('DOMContentLoaded', () => {
+      App.setupEditor('ex_errores_01');
+      const editor = document.getElementById('yaml-editor');
+      if(editor) editor.value = `services:
+  web:
+    image: nginx:latest
+    ports:
+    - 8080:80
+    environment:
+    - DEBUG: yes
+    volumes:
+    - ./html:/usr/share/nginx/html
+    restart: True
+    depends_on db
+volumes:
+  - db_data`;
+      
+      document.getElementById('btn-hint')?.addEventListener('click', () => {
+        document.getElementById('hint-box').classList.toggle('show');
+        document.getElementById('hint-box').innerHTML = '💡 <strong>Pistas:</strong> 1) Falta espacio tras `:` en `ports`. 2) `yes` y `True` son booleanos accidentales. 3) `depends_on` necesita `:` y estructura de mapa. 4) `volumes:` de raíz no lleva guiones. 5) `nginx:latest` es mala práctica.';
+      });
+    });
+  </script>
+</body>
+</html>

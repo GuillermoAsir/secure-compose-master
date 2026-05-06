@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Compose Master | Panel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>📘 Secure Compose Master</h1>
+      <span class="badge">Nivel 1</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+      <span id="theme-label" style="font-size:0.8rem; color:var(--text-muted);">Tema</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>🚀 Bienvenido al entrenamiento</h2>
+      <p>Practica YAML, Docker Compose y Kubernetes con ejercicios interactivos, validación en tiempo real y sistema de progreso. Ideal si nunca has tocado contenedores antes.</p>
+    </div>
+
+    <div class="grid-2">
+      <a href="mapas_y_listas.html" class="card" style="text-decoration:none; color:inherit;">
+        <h2>📐 1. Mapas y Listas</h2>
+        <p>Sangría estricta, tipos de datos, comillas y estructuras anidadas.</p>
+      </a>
+      <a href="detectar_errores.html" class="card" style="text-decoration:none; color:inherit;">
+        <h2>🐛 2. Detectar Errores</h2>
+        <p>Corrige YAML roto, evita tabs, booleanos accidentales y malas prácticas.</p>
+      </a>
+      <a href="validacion_herramientas.html" class="card" style="text-decoration:none; color:inherit;">
+        <h2>🛠️ 3. Validación</h2>
+        <p>Domina <code>yamllint</code>, <code>yq</code>, <code>docker compose config</code> y <code>dry-run</code>.</p>
+      </a>
+      <a href="ciclo_de_vida.html" class="card" style="text-decoration:none; color:inherit;">
+        <h2>🔄 4. Ciclo de Vida</h2>
+        <p>Dependencias, healthchecks, políticas de reinicio y arranque seguro.</p>
+      </a>
+      <a href="servicios_basicos.html" class="card" style="text-decoration:none; color:inherit;">
+        <h2>📦 5. Servicios Básicos</h2>
+        <p>De Nginx simple a WordPress+MySQL con aislamiento y buenas prácticas.</p>
+      </a>
+      <a href="volumenes_redes_seguridad.html" class="card" style="text-decoration:none; color:inherit;">
+        <h2>🔒 6. Volúmenes y Seguridad</h2>
+        <p>Persistencia, redes privadas, read-only, drop capabilities y límites.</p>
+      </a>
+      <a href="kubernetes_vs_compose.html" class="card" style="text-decoration:none; color:inherit;">
+        <h2>☸️ 7. K8s vs Compose</h2>
+        <p>Traducción de manifiestos, equivalencias y despliegues multi-documento.</p>
+      </a>
+    </div>
+  </main>
+
+  <div class="modal show" id="onboarding">
+    <div class="modal-content">
+      <h2>👋 ¿Primera vez aquí?</h2>
+      <p>No necesitas saber Docker ni YAML para empezar. Cada módulo incluye teoría clara, ejemplos visuales y un editor seguro donde practicarás sin romper nada en tu máquina.</p>
+      <button class="btn primary" id="btn-close-modal">Entendido, empezar</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

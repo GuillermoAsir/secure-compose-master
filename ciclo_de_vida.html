@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 4: Ciclo de Vida | Secure Compose Master</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>🔄 Ciclo de Vida y Ejecución</h1>
+      <span class="badge">Nivel 1</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="index.html" class="btn secondary">← Panel</a>
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
+      <button class="tab-btn" data-tab="referencia">📋 Referencia</button>
+      <button class="tab-btn" data-tab="reto">✏️ Reto</button>
+      <button class="tab-btn" data-tab="checklist">🔍 Decisiones</button>
+      <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+    </div>
+
+    <div id="teoria" class="panel active">
+      <div class="card">
+        <h2>⚙️ Controlando el arranque y la resiliencia</h2>
+        <p>Un contenedor no solo "se ejecuta". Necesita órdenes claras sobre <strong>cómo iniciar</strong>, <strong>qué hacer si falla</strong> y <strong>cuándo está realmente listo</strong>.</p>
+        <ul>
+          <li><code>command</code> / <code>entrypoint</code>: Sobrescriben el <code>CMD</code> y <code>ENTRYPOINT</code> del Dockerfile.</li>
+          <li><code>restart</code>: Define la política de resurrección automática.</li>
+          <li><code>healthcheck</code>: Comando que Docker ejecuta periódicamente para verificar que el servicio responde.</li>
+          <li><code>depends_on</code>: Garantiza orden de arranque. Combinado con <code>condition: service_healthy</code>, evita errores de conexión temprana.</li>
+          <li><code>init</code>: Si es <code>true</code>, inyecta un proceso <code>tini</code> para reapear zombies y propagar señales correctamente.</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>Clave del PDF:</strong> <code>depends_on</code> corto solo garantiza que el contenedor <em>arranca</em> antes. Para esperar a que esté <em>listo</em>, usa <code>healthcheck</code> + <code>condition: service_healthy</code>.</p>
+      </div>
+    </div>
+
+    <div id="referencia" class="panel">
+      <div class="card">
+        <h2>📋 Tablas de Referencia Rápida</h2>
+        <h3>Políticas de <code>restart</code></h3>
+        <table>
+          <tr><th>Valor</th><th>Comportamiento</th><th>Uso recomendado</th></tr>
+          <tr><td><code>no</code></td><td>Nunca reinicia</td><td>Desarrollo, jobs puntuales</td></tr>
+          <tr><td><code>always</code></td><td>Reinicia siempre (incluso si lo paras tú)</td><td>⚠️ Peligroso en producción</td></tr>
+          <tr><td><code>on-failure[:N]</code></td><td>Solo si sale con código != 0</td><td>Workers, tareas reintentables</td></tr>
+          <tr><td><code>unless-stopped</code></td><td>Reinicia siempre, respeta tu <code>stop</code> manual</td><td>✅ Producción (recomendado)</td></tr>
+        </table>
+        <h3 style="margin-top:1.5rem;">Parámetros de <code>healthcheck</code></h3>
+        <table>
+          <tr><th>Clave</th><th>Función</th></tr>
+          <tr><td><code>test</code></td><td>Comando de verificación (ej: <code>["CMD","curl","-f","http://localhost/"]</code>)</td></tr>
+          <tr><td><code>interval</code></td><td>Frecuencia de ejecución (ej: <code>30s</code>)</td></tr>
+          <tr><td><code>timeout</code></td><td>Tiempo máximo antes de marcar fallo (ej: <code>5s</code>)</td></tr>
+          <tr><td><code>retries</code></td><td>Fallos consecutivos para marcar <code>unhealthy</code> (ej: <code>3</code>)</td></tr>
+          <tr><td><code>start_period</code></td><td>Gracia inicial mientras arranca (ej: <code>20s</code>)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="reto" class="panel">
+      <div class="card">
+        <h2>🎯 Reto: Configura arranque seguro y dependencias reales</h2>
+        <p>Completa el bloque YAML para que:
+          <ol style="margin:0.5rem 0; padding-left:1.2rem;">
+            <li>Use <code>restart: unless-stopped</code></li>
+            <li>Defina un <code>healthcheck</code> válido contra <code>/health</code></li>
+            <li>Espera a <code>db</code> con <code>condition: service_healthy</code></li>
+            <li>Active <code>init: true</code></li>
+          </ol>
+        </p>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor" rows="12" placeholder="services:
+  app:
+    image: node:20-alpine
+    # ... completa aquí ...
+"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
+        </div>
+        <div id="hint-box" class="hint-box"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="checklist" class="panel">
+      <div class="card">
+        <h2>🔍 Árbol de Decisiones: ¿Qué clave uso?</h2>
+        <table>
+          <tr><th>Necesidad</th><th>Clave recomendada</th><th>Nota crítica</th></tr>
+          <tr><td>Sobreescribir el proceso principal</td><td><code>command</code> o <code>entrypoint</code></td><td>Usa array <code>["CMD","arg"]</code> para evitar problemas con shell</td></tr>
+          <tr><td>Que no se cae tras un crash</td><td><code>restart: unless-stopped</code></td><td>Nunca <code>always</code> en prod si necesitas pararlo manualmente</td></tr>
+          <tr><td>Esperar a que la BD acepte conexiones</td><td><code>depends_on.db.condition: service_healthy</code></td><td>Requiere <code>healthcheck</code> definido en <code>db</code></td></tr>
+          <tr><td>Evitar procesos zombi</td><td><code>init: true</code></td><td>Actívalo en servicios con procesos hijos</td></tr>
+          <tr><td>Dar tiempo al arranque antes de marcar fallo</td><td><code>start_period</code></td><td>Esencial en apps pesadas (Java, .NET, compilaciones)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="resultados" class="panel">
+      <div class="card">
+        <h2>📊 Tu Progreso</h2>
+        <p>Ejercicios completados: <strong id="completed-count">0</strong> / 10</p>
+        <p>XP acumulada: <strong id="xp-count">0</strong></p>
+        <div style="margin-top:1rem; padding:1rem; background:var(--surface-alt); border-radius:8px;">
+          <p>🎯 <strong>Siguiente meta:</strong> Configura un <code>healthcheck</code> funcional para desbloquear el badge <em>"Resilience Engineer"</em>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.setupEditor('ex_ciclo_01');
+      const editor = document.getElementById('yaml-editor');
+      const hintBtn = document.getElementById('btn-hint');
+      const validateBtn = document.getElementById('btn-validate');
+      const hintBox = document.getElementById('hint-box');
+      const feedback = document.getElementById('feedback');
+
+      hintBtn?.addEventListener('click', () => {
+        hintBox.classList.toggle('show');
+        hintBox.innerHTML = '💡 <strong>Pistas progresivas:</strong><br>1. <code>restart:</code> va al mismo nivel que <code>image:</code><br>2. <code>healthcheck:</code> requiere <code>test:</code>, <code>interval:</code>, <code>timeout:</code>, <code>retries:</code><br>3. <code>depends_on:</code> es un mapa, no lista. Usa <code>db:\n  condition: service_healthy</code><br>4. <code>init: true</code> es booleano real (sin comillas).';
+      });
+
+      validateBtn?.addEventListener('click', () => {
+        const val = (editor?.value || '').trim().toLowerCase();
+        const checks = [
+          val.includes('restart:') && val.includes('unless-stopped'),
+          val.includes('healthcheck:') && val.includes('test:') && val.includes('interval:'),
+          val.includes('depends_on:') && val.includes('condition: service_healthy'),
+          val.includes('init: true') || val.includes("init: 'true'") || val.includes("init: \"true\"")
+        ];
+        const passed = checks.filter(Boolean).length;
+        feedback.classList.add('show');
+        
+        if(passed >= 3) {
+          feedback.className = 'feedback success';
+          feedback.innerHTML = `✅ <strong>¡Excelente!</strong> ${passed}/4 requisitos cumplidos. Estructura de ciclo de vida correcta. +150 XP`;
+          App.addXP(150, 'ex_ciclo_01');
+        } else {
+          feedback.className = 'feedback error';
+          feedback.innerHTML = `⚠️ <strong>Revisa:</strong> Has cumplido ${passed}/4 puntos. Verifica indentación, booleanos reales y la estructura de mapa en <code>depends_on</code>.`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

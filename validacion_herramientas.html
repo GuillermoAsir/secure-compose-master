@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 3: Validación | Secure Compose Master</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>🛠️ Herramientas de Validación</h1>
+      <span class="badge">Nivel 1</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="index.html" class="btn secondary">← Panel</a>
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
+      <button class="tab-btn" data-tab="herramientas">🧰 Catálogo</button>
+      <button class="tab-btn" data-tab="reto">✏️ Simulador</button>
+      <button class="tab-btn" data-tab="checklist">📋 Decisión</button>
+      <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+    </div>
+
+    <div id="teoria" class="panel active">
+      <div class="card">
+        <h2>🔍 ¿Por qué validar antes de aplicar?</h2>
+        <p>YAML es estricto: un tab, un espacio mal colocado o un tipo de dato incorrecto rompe el parseo. Aplicar un YAML sin validar puede dejar contenedores huérfanos, exponer puertos o tumbar servicios en producción.</p>
+        <blockquote style="border-left:3px solid var(--primary); padding-left:1rem; margin:1rem 0; color:var(--text-muted);">
+          💡 <em>"Validar un YAML cuesta segundos. Depurar un despliegue roto cuesta horas."</em>
+        </blockquote>
+        <p>Las herramientas de validación actúan como <strong>filtros progresivos</strong>: primero revisan sintaxis pura, luego estructura, luego lógica específica de la plataforma (Compose o K8s). Nunca saltes pasos.</p>
+      </div>
+    </div>
+
+    <div id="herramientas" class="panel">
+      <div class="card">
+        <h2>🧰 Catálogo de Validadores</h2>
+        <div class="grid-2">
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>🔤 yamllint</h3>
+            <code>yamllint archivo.yml</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Valida <strong>sintaxis YAML pura</strong>: indentación, espacios tras <code>:</code>, tabuladores y estilo. No entiende de Docker ni K8s.</p>
+          </div>
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>🔄 yq</h3>
+            <code>yq -o=json archivo.yml</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Convierte YAML a JSON. Si falla aquí, la <strong>jerarquía está rota</strong>. Ideal para depurar mapas/listas complejas visualmente.</p>
+          </div>
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>🐳 docker compose config</h3>
+            <code>docker compose config --quiet</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Valida <strong>lógica de Compose</strong>: puertos, redes, volúmenes, variables y ciclo de vida. No arranca contenedores.</p>
+          </div>
+          <div class="card" style="padding:1rem; margin:0;">
+            <h3>☸️ kubectl dry-run</h3>
+            <code>kubectl apply -f manifest.yml --dry-run=client</code>
+            <p style="margin-top:0.5rem; font-size:0.9rem;">Valida contra el <strong>esquema local de K8s</strong>. Detecta campos desconocidos, tipos incorrectos y errores de API sin contactar al clúster.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="reto" class="panel">
+      <div class="card">
+        <h2>🎯 Simulador: Elige la herramienta correcta</h2>
+        <p><strong>Escenario 1:</strong> Tienes un <code>docker-compose.yml</code> que falla al arrancar. Quieres verificar si la sintaxis y la estructura específica de Compose son válidas <strong>sin levantar contenedores</strong>.</p>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor" rows="3" placeholder="Escribe aquí el comando completo de validación..."></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate">✅ Validar Comando</button>
+        </div>
+        <div id="hint-box" class="hint-box"></div>
+        <div id="feedback" class="feedback"></div>
+
+        <hr style="border:none; border-top:1px solid var(--border); margin:1.5rem 0;">
+
+        <p><strong>Escenario 2:</strong> Tienes un manifiesto de Kubernetes con múltiples documentos (<code>---</code>). Quieres validar que la estructura coincide con la API de K8s antes de aplicar.</p>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor-k8s" rows="3" placeholder="Escribe aquí el comando completo de validación..."></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint-k8s">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate-k8s">✅ Validar Comando</button>
+        </div>
+        <div id="hint-box-k8s" class="hint-box"></div>
+        <div id="feedback-k8s" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="checklist" class="panel">
+      <div class="card">
+        <h2>📋 Árbol de Decisión Rápido</h2>
+        <table>
+          <tr><th>¿Qué quieres validar?</th><th>Herramienta recomendada</th><th>Ejemplo de uso</th></tr>
+          <tr><td>Sangría, tabs, espacios tras <code>:</code></td><td><code>yamllint</code></td><td><code>yamllint docker-compose.yml</code></td></tr>
+          <tr><td>Jerarquía de listas/mapas complejas</td><td><code>yq -o=json</code></td><td><code>yq -o=json manifest.yml</code></td></tr>
+          <tr><td>Lógica de Compose (puertos, redes, vars)</td><td><code>docker compose config</code></td><td><code>docker compose config --quiet</code></td></tr>
+          <tr><td>Esquema K8s (apiVersion, kind, campos)</td><td><code>kubectl apply --dry-run=client</code></td><td><code>kubectl apply -f dep.yml --dry-run=client</code></td></tr>
+          <tr><td>Conexión real al clúster (validación remota)</td><td><code>kubectl apply --dry-run=server</code></td><td><code>kubectl apply -f svc.yml --dry-run=server</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="resultados" class="panel">
+      <div class="card">
+        <h2>📊 Tu Progreso</h2>
+        <p>Ejercicios completados: <strong id="completed-count">0</strong> / 10</p>
+        <p>XP acumulada: <strong id="xp-count">0</strong></p>
+        <div style="margin-top:1rem; padding:1rem; background:var(--surface-alt); border-radius:8px;">
+          <p>🎯 <strong>Siguiente meta:</strong> Identifica correctamente 3 herramientas de validación para desbloquear el badge <em>"Auditor de Infraestructura"</em>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.setupEditor('ex_validacion_01');
+
+      // Escenario 1: Docker Compose
+      const hint1 = document.getElementById('btn-hint');
+      const validate1 = document.getElementById('btn-validate');
+      const fb1 = document.getElementById('feedback');
+      const hintBox1 = document.getElementById('hint-box');
+      const editor1 = document.getElementById('yaml-editor');
+
+      hint1?.addEventListener('click', () => {
+        hintBox1.classList.toggle('show');
+        hintBox1.innerHTML = '💡 <strong>Pista:</strong> Busca el comando de Compose que valida el archivo sin arrancar nada. Añade <code>--quiet</code> para ver solo errores.';
+      });
+
+      validate1?.addEventListener('click', () => {
+        const cmd = (editor1?.value || '').trim().toLowerCase();
+        const isValid = cmd.includes('docker') && cmd.includes('compose') && cmd.includes('config');
+        fb1.className = `feedback show ${isValid ? 'success' : 'error'}`;
+        fb1.innerHTML = isValid 
+          ? '✅ <strong>¡Correcto!</strong> <code>docker compose config</code> valida sintaxis + lógica Compose. +100 XP' 
+          : '❌ <strong>Revisa:</strong> El comando debe incluir <code>docker compose config</code>. No arranca contenedores.';
+        if(isValid) App.addXP(100, 'ex_validacion_01');
+      });
+
+      // Escenario 2: Kubernetes
+      const hint2 = document.getElementById('btn-hint-k8s');
+      const validate2 = document.getElementById('btn-validate-k8s');
+      const fb2 = document.getElementById('feedback-k8s');
+      const hintBox2 = document.getElementById('hint-box-k8s');
+      const editor2 = document.getElementById('yaml-editor-k8s');
+
+      hint2?.addEventListener('click', () => {
+        hintBox2.classList.toggle('show');
+        hintBox2.innerHTML = '💡 <strong>Pista:</strong> Usa <code>kubectl apply</code> con la bandera de ejecución simulada. <code>client</code> valida localmente contra el esquema.';
+      });
+
+      validate2?.addEventListener('click', () => {
+        const cmd = (editor2?.value || '').trim().toLowerCase();
+        const isValid = cmd.includes('kubectl') && cmd.includes('apply') && cmd.includes('dry-run');
+        fb2.className = `feedback show ${isValid ? 'success' : 'error'}`;
+        fb2.innerHTML = isValid 
+          ? '✅ <strong>¡Correcto!</strong> <code>--dry-run=client</code> valida contra el esquema local sin contactar al API server. +100 XP' 
+          : '❌ <strong>Revisa:</strong> El comando debe ser <code>kubectl apply -f archivo --dry-run=client</code>.';
+        if(isValid) App.addXP(100, 'ex_validacion_02');
+      });
+    });
+  </script>
+</body>
+</html>

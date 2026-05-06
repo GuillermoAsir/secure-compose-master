@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Mapas y Listas | Secure Compose Master</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>📐 Mapas y Listas</h1>
+      <span class="badge">Nivel 1</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="index.html" class="btn secondary">← Panel</a>
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
+      <button class="tab-btn" data-tab="herramientas">🛠️ Referencia</button>
+      <button class="tab-btn" data-tab="editor">✏️ Editor</button>
+      <button class="tab-btn" data-tab="auditoria">🔍 Auditoría</button>
+      <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+    </div>
+
+    <div id="teoria" class="panel active">
+      <div class="card">
+        <h2>📦 ¿Qué son los Mapas y Listas en YAML?</h2>
+        <p>YAML organiza datos en tres bloques: <strong>escalares</strong> (valores simples), <strong>listas</strong> (secuencias) y <strong>mapas</strong> (pares clave-valor).</p>
+        <ul>
+          <li><strong>Mapas:</strong> <code>clave: valor</code>. Como un diccionario. El orden no importa.</li>
+          <li><strong>Listas:</strong> Cada elemento empieza con <code>- </code>. El orden sí importa.</li>
+          <li><strong>Regla de oro:</strong> La jerarquía se define SOLO con indentación (2 espacios). Nunca uses tabuladores.</li>
+        </ul>
+        <pre><code>alumnos:
+  - nombre: Ana
+    edad: 22
+    cursos:
+      - Ciberseguridad
+      - Docker
+  - nombre: Luis
+    edad: 25
+    cursos:
+      - Kubernetes</code></pre>
+      </div>
+    </div>
+
+    <div id="herramientas" class="panel">
+      <div class="card">
+        <h2>📋 Cheatsheet Rápido</h2>
+        <table>
+          <tr><th>Concepto</th><th>Sintaxis</th><th>Ejemplo</th></tr>
+          <tr><td>Mapa</td><td><code>clave: valor</code></td><td><code>puerto: 8080</code></td></tr>
+          <tr><td>Lista</td><td><code>- elemento</code></td><td><code>- 80</code><br><code>- 443</code></td></tr>
+          <tr><td>String reservado</td><td><code>"true"</code></td><td><code>activo: "on"</code></td></tr>
+          <tr><td>Null</td><td><code>~</code> o vacío</td><td><code>comentario: ~</code></td></tr>
+          <tr><td>Indentación</td><td>2 espacios exactos</td><td><code>servicio:\n  imagen: nginx</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="editor" class="panel">
+      <div class="card">
+        <h2>✏️ Ejercicio 1: Define un servicio básico</h2>
+        <p>Crea un bloque YAML que contenga: <code>nombre</code>, <code>version</code> (como string), y una lista de <code>puertos</code> con al menos 2 valores.</p>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor" placeholder="Escribe tu YAML aquí..."></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
+        </div>
+        <div id="hint-box" class="hint-box"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="auditoria" class="panel">
+      <div class="card">
+        <h2>🔍 Auditoría Automática</h2>
+        <p>Antes de aplicar un YAML, valida su estructura. En esta herramienta, el validador comprueba:</p>
+        <ul>
+          <li>✅ Uso correcto de espacios (prohibidos tabuladores)</li>
+          <li>✅ Espacio obligatorio después de <code>:</code></li>
+          <li>✅ Tipos de datos coherentes</li>
+          <li>✅ Jerarquía consistente</li>
+        </ul>
+        <p class="text-muted">💡 En tu terminal local, usa: <code>yamllint archivo.yml</code> o <code>docker compose config</code></p>
+      </div>
+    </div>
+
+    <div id="resultados" class="panel">
+      <div class="card">
+        <h2>📊 Tu Progreso</h2>
+        <p>Ejercicios completados: <strong id="completed-count">0</strong> / 10</p>
+        <p>XP acumulada: <strong id="xp-count">0</strong></p>
+        <div style="margin-top:1rem; padding:1rem; background:var(--surface-alt); border-radius:8px;">
+          <p>🎯 <strong>Siguiente meta:</strong> Completa 3 ejercicios para desbloquear el badge <em>"YAML Novato"</em>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // Inicializar lógica específica del módulo
+    document.addEventListener('DOMContentLoaded', () => App.setupEditor('ex_mapas_01'));
+  </script>
+</body>
+</html>

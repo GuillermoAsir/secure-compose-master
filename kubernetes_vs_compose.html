@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 7: K8s vs Compose | Secure Compose Master</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>☸️ Kubernetes vs Docker Compose</h1>
+      <span class="badge">Nivel 2</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="index.html" class="btn secondary">← Panel</a>
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
+      <button class="tab-btn" data-tab="referencia">📋 Equivalencias</button>
+      <button class="tab-btn" data-tab="reto">✏️ Traducción</button>
+      <button class="tab-btn" data-tab="checklist">🔍 Checklist</button>
+      <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+    </div>
+
+    <div id="teoria" class="panel active">
+      <div class="card">
+        <h2>🌐 De Orquestador Local a Clúster Distribuido</h2>
+        <p><strong>Docker Compose</strong> gestiona contenedores en <em>una sola máquina</em>. <strong>Kubernetes</strong> los distribuye en un clúster de nodos, gestionando réplicas, descubrimiento de servicios y autorreparación de forma nativa.</p>
+        <ul>
+          <li><strong>Estructura K8s:</strong> Todo objeto requiere <code>apiVersion</code>, <code>kind</code>, <code>metadata</code> y <code>spec</code>.</li>
+          <li><strong>Multi-documento:</strong> K8s permite varios objetos en un YAML separados por <code>---</code>. Compose NO lo soporta.</li>
+          <li><strong>Redes vs Services:</strong> En Compose usas <code>networks</code>. En K8s, los <code>Services</code> actúan como DNS interno estable.</li>
+          <li><strong>Reinicio:</strong> <code>restart: unless-stopped</code> en Compose equivale al comportamiento por defecto de un <code>Deployment</code>.</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>Clave del PDF:</strong> Un <code>Service</code> en K8s no "expone" puertos al exterior por sí solo. Usa <code>type: NodePort</code> o <code>LoadBalancer</code> para acceso externo.</p>
+      </div>
+    </div>
+
+    <div id="referencia" class="panel">
+      <div class="card">
+        <h2>📋 Tabla de Equivalencias</h2>
+        <table>
+          <tr><th>Concepto</th><th>Docker Compose</th><th>Kubernetes</th></tr>
+          <tr><td>Contenedor</td><td><code>services.<name>.image</code></td><td><code>spec.containers[].image</code></td></tr>
+          <tr><td>Réplicas</td><td><code>deploy.replicas</code></td><td><code>spec.replicas</code></td></tr>
+          <tr><td>Exposición</td><td><code>ports: "H:C"</code></td><td><code>Service: type: NodePort/LoadBalancer</code></td></tr>
+          <tr><td>Variables</td><td><code>environment:</code> / <code>env_file:</code></td><td><code>envFrom: ConfigMap/Secret</code></td></tr>
+          <tr><td>Persistencia</td><td><code>volumes:</code></td><td><code>PersistentVolumeClaim + volumes:</code></td></tr>
+          <tr><td>Salud</td><td><code>healthcheck:</code></td><td><code>livenessProbe / readinessProbe</code></td></tr>
+          <tr><td>Reinicio</td><td><code>restart:</code></td><td>Implícito en <code>Deployment</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="reto" class="panel">
+      <div class="card">
+        <h2>🎯 Reto: Traduce Nginx a K8s</h2>
+        <p>Convierte este bloque Compose a un manifiesto K8s multi-documento con <strong>Deployment</strong> (2 réplicas) y <strong>Service</strong> (NodePort 30080):</p>
+        <pre style="margin:0.5rem 0; font-size:0.9rem;">services:
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"</pre>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor" rows="14" placeholder="# Escribe aquí el manifiesto K8s..."></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
+        </div>
+        <div id="hint-box" class="hint-box"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="checklist" class="panel">
+      <div class="card">
+        <h2>🔍 Checklist de Traducción K8s</h2>
+        <ul style="list-style:none; padding:0; display:grid; gap:0.6rem;">
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> Cada objeto tiene <code>apiVersion</code>, <code>kind</code>, <code>metadata.name</code> y <code>spec</code></li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> El <code>Deployment</code> usa <code>selector.matchLabels</code> que coincide con <code>template.metadata.labels</code></li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> El <code>Service</code> usa <code>selector</code> idéntico al label del pod</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> Los documentos están separados por <code>---</code></li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> <code>ports</code> en Service usan <code>port</code> (clúster), <code>targetPort</code> (contenedor) y <code>nodePort</code> (host)</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>Valida siempre:</strong> <code>kubectl apply -f manifiesto.yml --dry-run=client</code> antes de aplicar.</p>
+      </div>
+    </div>
+
+    <div id="resultados" class="panel">
+      <div class="card">
+        <h2>📊 Tu Progreso</h2>
+        <p>Ejercicios completados: <strong id="completed-count">0</strong> / 10</p>
+        <p>XP acumulada: <strong id="xp-count">0</strong></p>
+        <div style="margin-top:1rem; padding:1rem; background:var(--surface-alt); border-radius:8px;">
+          <p>🎯 <strong>Siguiente meta:</strong> Genera un Deployment + Service válido para desbloquear el badge <em>"K8s Translator"</em>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.setupEditor('ex_k8s_01');
+      const editor = document.getElementById('yaml-editor');
+      const hintBtn = document.getElementById('btn-hint');
+      const validateBtn = document.getElementById('btn-validate');
+      const hintBox = document.getElementById('hint-box');
+      const feedback = document.getElementById('feedback');
+
+      hintBtn?.addEventListener('click', () => {
+        hintBox.classList.toggle('show');
+        hintBox.innerHTML = '💡 <strong>Pistas progresivas:</strong><br>1. Primer doc: <code>apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.27-alpine\n        ports:\n        - containerPort: 80</code><br>2. Separador: <code>---</code><br>3. Segundo doc: <code>apiVersion: v1\nkind: Service\nmetadata:\n  name: web-svc\nspec:\n  type: NodePort\n  selector:\n    app: web\n  ports:\n  - port: 80\n    targetPort: 80\n    nodePort: 30080</code>';
+      });
+
+      validateBtn?.addEventListener('click', () => {
+        const val = (editor?.value || '').trim().toLowerCase();
+        const checks = [
+          val.includes('apiversion:') && val.includes('apps/v1'),
+          val.includes('kind: deployment') && val.includes('replicas: 2'),
+          val.includes('matchlabels:') && val.includes('template:'),
+          val.includes('---'),
+          val.includes('kind: service') && val.includes('nodeport') && val.includes('30080')
+        ];
+        const passed = checks.filter(Boolean).length;
+        feedback.classList.add('show');
+        
+        if(passed >= 4) {
+          feedback.className = 'feedback success';
+          feedback.innerHTML = `✅ <strong>¡Traducción correcta!</strong> ${passed}/5 estructuras K8s válidas. Multi-documento bien formado. +200 XP`;
+          App.addXP(200, 'ex_k8s_01');
+        } else {
+          feedback.className = 'feedback error';
+          feedback.innerHTML = `⚠️ <strong>Revisa:</strong> ${passed}/5 requisitos. Verifica que el <code>selector</code> del Service coincide con el <code>label</code> del Deployment, y que los documentos están separados por <code>---</code>.`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

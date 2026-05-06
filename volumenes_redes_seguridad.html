@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 6: Volúmenes, Redes y Seguridad | Secure Compose Master</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>🔒 Volúmenes, Redes y Hardening</h1>
+      <span class="badge">Nivel 2</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="index.html" class="btn secondary">← Panel</a>
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
+      <button class="tab-btn" data-tab="referencia">📋 Referencia</button>
+      <button class="tab-btn" data-tab="reto">✏️ Reto</button>
+      <button class="tab-btn" data-tab="checklist">🔍 Checklist</button>
+      <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+    </div>
+
+    <div id="teoria" class="panel active">
+      <div class="card">
+        <h2>🗃️ Persistencia, Aislamiento y Principio de Mínimo Privilegio</h2>
+        <p>Los contenedores son efímeros por diseño. Para datos críticos, aislamiento real y endurecimiento, Compose ofrece tres bloques fundamentales:</p>
+        <ul>
+          <li><strong>Volúmenes:</strong> Nombrados (gestión Docker), Bind Mounts (ruta host) y tmpfs (RAM). Solo los nombrados sobreviven a <code>docker compose down</code>.</li>
+          <li><strong>Redes:</strong> Por defecto todos comparten <code>_default</code>. Definir redes propias permite aislar servicios. <code>internal: true</code> corta salida a Internet.</li>
+          <li><strong>Seguridad:</strong> <code>read_only: true</code> bloquea escritura en raíz. <code>cap_drop: ["ALL"]</code> quita privilegios Linux. <code>mem_limit</code> y <code>cpus</code> evitan fugas de recursos.</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>Clave del PDF:</strong> Combina <code>read_only</code> con <code>tmpfs</code> en <code>/tmp</code> o <code>/var/run</code> para que la app funcione sin romper la política de solo lectura.</p>
+      </div>
+    </div>
+
+    <div id="referencia" class="panel">
+      <div class="card">
+        <h2>📋 Sintaxis y Equivalencias</h2>
+        <h3>Tipos de Volúmenes</h3>
+        <table>
+          <tr><th>Tipo</th><th>Sintaxis</th><th>Persistencia</th></tr>
+          <tr><td>Named</td><td><code>db_data:/var/lib/mysql</code></td><td>✅ Sí (gestión Docker)</td></tr>
+          <tr><td>Bind Mount</td><td><code>./html:/usr/share/nginx/html:ro</code></td><td>⚠️ Depende del host</td></tr>
+          <tr><td>tmpfs</td><td><code>type: tmpfs, destination: /tmp</code></td><td>❌ No (RAM volátil)</td></tr>
+        </table>
+        <h3 style="margin-top:1.5rem;">Claves de Hardening</h3>
+        <table>
+          <tr><th>Clave</th><th>Efecto</th><th>Ejemplo</th></tr>
+          <tr><td><code>read_only</code></td><td>Sistema de ficheros raíz solo lectura</td><td><code>read_only: true</code></td></tr>
+          <tr><td><code>cap_drop</code></td><td>Elimina capacidades Linux</td><td><code>cap_drop: ["ALL"]</code></td></tr>
+          <tr><td><code>security_opt</code></td><td>Políticas AppArmor/seccomp</td><td><code>security_opt: ["no-new-privileges:true"]</code></td></tr>
+          <tr><td><code>mem_limit</code> / <code>cpus</code></td><td>Límites de recursos</td><td><code>mem_limit: 512m</code>, <code>cpus: "0.5"</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="reto" class="panel">
+      <div class="card">
+        <h2>🎯 Reto: Endurece un servicio web</h2>
+        <p>Modifica el bloque para cumplir:
+          <ol style="margin:0.5rem 0; padding-left:1.2rem;">
+            <li>Sistema de ficheros raíz solo lectura (<code>read_only</code>)</li>
+            <li>Elimina todas las capacidades Linux (<code>cap_drop</code>)</li>
+            <li>Añade un <code>tmpfs</code> para <code>/tmp</code></li>
+            <li>Define una red <code>interna</code> con <code>internal: true</code></li>
+            <li>Límites: <code>mem_limit: 256m</code> y <code>cpus: "0.5"</code></li>
+          </ol>
+        </p>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor" rows="12" placeholder="services:
+  app:
+    image: node:20-alpine
+    # ... aplica hardening aquí ...
+    networks:
+      - interna
+
+networks:
+  # ... define la red interna ...
+"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
+        </div>
+        <div id="hint-box" class="hint-box"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="checklist" class="panel">
+      <div class="card">
+        <h2>🔍 Checklist de Despliegue Seguro</h2>
+        <ul style="list-style:none; padding:0; display:grid; gap:0.6rem;">
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> ¿Usa <code>read_only: true</code>? Si falla, añade <code>tmpfs</code> en <code>/tmp</code> o <code>/var/run</code></li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> ¿Incluye <code>cap_drop: ["ALL"]</code>? Solo añade <code>cap_add</code> si es estrictamente necesario</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> ¿Las BBDD o workers están en redes <code>internal: true</code>?</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> ¿Tiene <code>mem_limit</code> y <code>cpus</code> definidos?</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> ¿Evita <code>privileged: true</code>? (Casi nunca es necesario)</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>Valida:</strong> <code>docker compose config --quiet</code> y revisa logs con <code>docker logs</code> para detectar permisos denegados por <code>read_only</code>.</p>
+      </div>
+    </div>
+
+    <div id="resultados" class="panel">
+      <div class="card">
+        <h2>📊 Tu Progreso</h2>
+        <p>Ejercicios completados: <strong id="completed-count">0</strong> / 10</p>
+        <p>XP acumulada: <strong id="xp-count">0</strong></p>
+        <div style="margin-top:1rem; padding:1rem; background:var(--surface-alt); border-radius:8px;">
+          <p>🎯 <strong>Siguiente meta:</strong> Aplica hardening completo para desbloquear el badge <em>"Security Engineer"</em>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.setupEditor('ex_seguridad_01');
+      const editor = document.getElementById('yaml-editor');
+      const hintBtn = document.getElementById('btn-hint');
+      const validateBtn = document.getElementById('btn-validate');
+      const hintBox = document.getElementById('hint-box');
+      const feedback = document.getElementById('feedback');
+
+      hintBtn?.addEventListener('click', () => {
+        hintBox.classList.toggle('show');
+        hintBox.innerHTML = '💡 <strong>Pistas progresivas:</strong><br>1. <code>read_only: true</code> y <code>cap_drop: ["ALL"]</code> van al mismo nivel que <code>image</code><br>2. tmpfs usa sintaxis larga: <code>tmpfs:\n  - /tmp</code> o <code>volumes:\n  - type: tmpfs\n    target: /tmp</code><br>3. Red: <code>networks:\n  interna:\n    driver: bridge\n    internal: true</code><br>4. Límites: <code>mem_limit: 256m</code>, <code>cpus: "0.5"</code> (comillas en cpus)';
+      });
+
+      validateBtn?.addEventListener('click', () => {
+        const val = (editor?.value || '').trim().toLowerCase();
+        const checks = [
+          val.includes('read_only: true'),
+          val.includes('cap_drop:') && val.includes('"all"'),
+          (val.includes('tmpfs') && (val.includes('/tmp') || val.includes('target:'))),
+          val.includes('internal: true'),
+          val.includes('mem_limit:') && val.includes('cpus:')
+        ];
+        const passed = checks.filter(Boolean).length;
+        feedback.classList.add('show');
+        
+        if(passed >= 4) {
+          feedback.className = 'feedback success';
+          feedback.innerHTML = `✅ <strong>¡Hardening válido!</strong> ${passed}/5 medidas aplicadas correctamente. +150 XP`;
+          App.addXP(150, 'ex_seguridad_01');
+        } else {
+          feedback.className = 'feedback error';
+          feedback.innerHTML = `⚠️ <strong>Revisa:</strong> Has cumplido ${passed}/5 puntos. Verifica comillas en "ALL", sintaxis de tmpfs y que <code>internal: true</code> esté bajo la definición de red, no del servicio.`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

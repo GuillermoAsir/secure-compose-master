@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 5: Servicios Básicos | Secure Compose Master</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>📦 Servicios Básicos y Multi-Contenedor</h1>
+      <span class="badge">Nivel 1</span>
+    </div>
+    <div class="progress-wrap">
+      <span>Progreso:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="index.html" class="btn secondary">← Panel</a>
+      <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
+      <button class="tab-btn" data-tab="referencia">📋 Referencia</button>
+      <button class="tab-btn" data-tab="reto">✏️ Reto</button>
+      <button class="tab-btn" data-tab="checklist">🔍 Decisiones</button>
+      <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+    </div>
+
+    <div id="teoria" class="panel active">
+      <div class="card">
+        <h2>🌱 De un contenedor simple a una aplicación real</h2>
+        <p>Un <code>docker-compose.yml</code> define servicios bajo la clave <code>services:</code>. Cada servicio es un contenedor independiente con su propia imagen, red y almacenamiento.</p>
+        <ul>
+          <li><code>image</code>: Imagen pública o privada. <strong>Nunca uses <code>:latest</code> en producción</strong>.</li>
+          <li><code>ports</code>: Expone al host (<code>HOST:CONTAINER</code>). <code>expose</code> solo comunica entre servicios de la misma red.</li>
+          <li><code>environment</code>: Variables de entorno. Acepta lista (<code>- KEY=v</code>) o mapa (<code>KEY: v</code>).</li>
+          <li><code>env_file</code>: Carga variables desde <code>.env</code>. Ideal para credenciales.</li>
+          <li><code>volumes</code>: Persistencia. Nombrados (gestión Docker), bind mounts (ruta host) o tmpfs (RAM).</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>Del PDF:</strong> Las dos sintaxis de <code>environment</code> son válidas, pero la de mapa permite mejor resaltado. <strong>Ojo:</strong> en mapa, <code>DEBUG: false</code> se parsea como booleano. Usa <code>DEBUG: "false"</code>.</p>
+      </div>
+    </div>
+
+    <div id="referencia" class="panel">
+      <div class="card">
+        <h2>📋 Sintaxis y Equivalencias</h2>
+        <h3>Tipos de Volúmenes</h3>
+        <table>
+          <tr><th>Tipo</th><th>Sintaxis</th><th>Uso</th></tr>
+          <tr><td>Named Volume</td><td><code>db_data:/var/lib/mysql</code></td><td>Datos persistentes (BBDD, logs)</td></tr>
+          <tr><td>Bind Mount</td><td><code>./html:/usr/share/nginx/html:ro</code></td><td>Código en desarrollo, configs</td></tr>
+          <tr><td>tmpfs</td><td><code>type: tmpfs, destination: /tmp</code></td><td>Cachés efímeras, sesiones</td></tr>
+        </table>
+        <h3 style="margin-top:1.5rem;"><code>environment</code>: Lista vs Mapa</h3>
+        <pre><code># Lista (KEY=valor)
+environment:
+  - DEBUG=false
+  - DB_PORT=${DB_PORT:-5432}
+
+# Mapa (clave: valor)
+environment:
+  DEBUG: "false"          # Comillas obligatorias
+  DB_PORT: ${DB_PORT:-5432}</code></pre>
+      </div>
+    </div>
+
+    <div id="reto" class="panel">
+      <div class="card">
+        <h2>🎯 Reto: WordPress + MySQL (Simplificado)</h2>
+        <p>Completa la estructura para que:
+          <ol style="margin:0.5rem 0; padding-left:1.2rem;">
+            <li><code>db</code> use imagen <code>mysql:8.0</code>, volume <code>db_data:/var/lib/mysql</code> y password desde <code>${DB_ROOT}</code></li>
+            <li><code>wp</code> use <code>image: wordpress:6.4</code>, expuesto en <code>8080:80</code>, y conecte a <code>db</code></li>
+            <li>Ambos usen <code>restart: unless-stopped</code></li>
+            <li>Definición correcta de <code>volumes:</code> a nivel raíz</li>
+          </ol>
+        </p>
+        <div class="editor-wrap">
+          <textarea id="yaml-editor" rows="14" placeholder="services:
+  db:
+    image: mysql:8.0
+    # ...
+  wp:
+    image: wordpress:6.4
+    # ...
+
+volumes:
+  # ...
+"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
+          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
+        </div>
+        <div id="hint-box" class="hint-box"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="checklist" class="panel">
+      <div class="card">
+        <h2>🔍 Checklist de Buenas Prácticas</h2>
+        <ul style="list-style:none; padding:0; display:grid; gap:0.6rem;">
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> Fija versiones de imágenes (<code>nginx:1.27-alpine</code>, no <code>:latest</code>)</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> Usa <code>env_file</code> o interpolación <code>${VAR}</code> para secretos</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> Solo expone con <code>ports:</code> lo que realmente necesita el host</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> En <code>environment</code> tipo mapa, envuelve booleanos/strings reservados en comillas</li>
+          <li style="display:flex; gap:0.6rem;"><span>✅</span> Declara <code>volumes:</code> a nivel raíz para volúmenes nombrados</li>
+        </ul>
+        <p style="margin-top:1rem; color:var(--text-muted);">💡 <strong>Valida siempre:</strong> <code>docker compose config --quiet</code> antes de <code>up</code>.</p>
+      </div>
+    </div>
+
+    <div id="resultados" class="panel">
+      <div class="card">
+        <h2>📊 Tu Progreso</h2>
+        <p>Ejercicios completados: <strong id="completed-count">0</strong> / 10</p>
+        <p>XP acumulada: <strong id="xp-count">0</strong></p>
+        <div style="margin-top:1rem; padding:1rem; background:var(--surface-alt); border-radius:8px;">
+          <p>🎯 <strong>Siguiente meta:</strong> Monta un stack multi-contenedor sin errores de tipado para desbloquear el badge <em>"Compose Architect"</em>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.setupEditor('ex_servicios_01');
+      const editor = document.getElementById('yaml-editor');
+      const hintBtn = document.getElementById('btn-hint');
+      const validateBtn = document.getElementById('btn-validate');
+      const hintBox = document.getElementById('hint-box');
+      const feedback = document.getElementById('feedback');
+
+      hintBtn?.addEventListener('click', () => {
+        hintBox.classList.toggle('show');
+        hintBox.innerHTML = '💡 <strong>Pistas progresivas:</strong><br>1. <code>db</code> necesita <code>environment:\n  MYSQL_ROOT_PASSWORD: ${DB_ROOT}</code><br>2. <code>wp</code> necesita <code>ports: - "8080:80"</code> y <code>environment:\n  WORDPRESS_DB_HOST: db</code><br>3. Ambos comparten <code>restart: unless-stopped</code> (mismo nivel que <code>image</code>)<br>4. Al final, fuera de <code>services</code>, define <code>volumes:\n  db_data:</code>';
+      });
+
+      validateBtn?.addEventListener('click', () => {
+        const val = (editor?.value || '').trim().toLowerCase();
+        const checks = [
+          val.includes('mysql:8.0') && val.includes('wordpress:6.4'),
+          val.includes('restart: unless-stopped'),
+          val.includes('ports:') && val.includes('8080:80'),
+          val.includes('volumes:') && val.includes('db_data:'),
+          val.includes('${db_root}') || val.includes('${db_password}') || val.includes('mysql_root_password:')
+        ];
+        const passed = checks.filter(Boolean).length;
+        feedback.classList.add('show');
+        
+        if(passed >= 4) {
+          feedback.className = 'feedback success';
+          feedback.innerHTML = `✅ <strong>¡Estructura válida!</strong> ${passed}/5 puntos clave detectados. Multi-contenedor correctamente aislado. +200 XP`;
+          App.addXP(200, 'ex_servicios_01');
+        } else {
+          feedback.className = 'feedback error';
+          feedback.innerHTML = `⚠️ <strong>Revisa:</strong> ${passed}/5 requisitos. Verifica que <code>volumes:</code> esté a nivel raíz (no indentado bajo un servicio), y que los puertos usen comillas si contienen <code>:</code>.`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

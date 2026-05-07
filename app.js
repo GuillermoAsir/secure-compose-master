@@ -33,7 +33,7 @@ const App = {
         instruction: 'Crea una configuración de servidor con host "192.168.1.10" y puerto 8080. Usa indentación de 2 espacios.',
         hint: 'La clave "host" y "puerto" deben estar sangradas respecto a "servicio".', 
         template: 'services:\n  host:\n  ports:', 
-        solution: 'services:\n  host: 192.168.1.10\n  puerto: 8080', 
+        solution: 'services:\n  host: 192.168.1.10\n  ports: 8080', 
         keywords: ['services:', '  host:', '  ports:'], 
         xp: 100 
       },

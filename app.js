@@ -1053,17 +1053,24 @@ const App = {
 
   validateTask(ex, input) {
     if (!input) return false;
-    const norm = input.replace(/\s+/g, ' ').trim().toLowerCase();
+
+    const norm = input.toLowerCase();
     
+    // 1. Rechazar tabuladores inmediatamente
+    if (norm.includes('\t')) return false; 
+    
+    // 2. Rechazar falta de espacio tras dos puntos (ej: "clave:valor")
+    // Esta regex busca ":" seguido inmediatamente de un caracter alfanumérico o guión
+    if (/:[a-z0-9_-]/.test(norm)) return false; 
+
     if (ex.type === 'mcq') {
-      return norm === ex.answer.toLowerCase();
+      return norm.includes(ex.answer.toLowerCase());
     }
     
-    // Validación estructural básica
-    if (norm.includes('\t')) return false; // Tabs prohibidos
-    
-    // Validación por keywords
-    return ex.keywords.every(k => norm.includes(k.toLowerCase()));
+    return ex.keywords.every(k => {
+      const cleanKeyword = k.trim().toLowerCase();
+      return norm.includes(cleanKeyword);
+    });
   },
 
   getTaskStatus(module, index) {

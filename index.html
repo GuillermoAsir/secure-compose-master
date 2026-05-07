@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Compose Master | Panel</title>
+  <title>Secure Compose Master | Panel Principal</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,62 +13,79 @@
       <span class="badge">Nivel 1</span>
     </div>
     <div class="progress-wrap">
-      <span>Progreso:</span>
-      <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+      <span>Progreso Global:</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
       <span id="xp-display">0 XP</span>
     </div>
     <div style="display:flex; gap:0.8rem; align-items:center;">
       <button class="btn secondary" id="theme-toggle">🌙 Oscuro</button>
-      <span id="theme-label" style="font-size:0.8rem; color:var(--text-muted);">Tema</span>
     </div>
   </header>
 
   <main>
-    <div class="card">
-      <h2>🚀 Bienvenido al entrenamiento</h2>
-      <p>Practica YAML, Docker Compose y Kubernetes con ejercicios interactivos, validación en tiempo real y sistema de progreso. Ideal si nunca has tocado contenedores antes.</p>
+    <div class="card" style="text-align:center; padding: 2rem;">
+      <h2>🚀 Bienvenido al Entrenamiento YAML & Orquestación</h2>
+      <p style="max-width: 600px; margin: 0 auto; color: var(--text-muted);">
+        Practica sintaxis YAML, Docker Compose y Kubernetes con 70 ejercicios interactivos. 
+        Tu progreso se guarda automáticamente en el navegador.
+      </p>
     </div>
 
-    <div class="grid-2">
-      <a href="mapas_y_listas.html" class="card" style="text-decoration:none; color:inherit;">
-        <h2>📐 1. Mapas y Listas</h2>
-        <p>Sangría estricta, tipos de datos, comillas y estructuras anidadas.</p>
+    <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+      
+      <!-- Módulo 1 -->
+      <a href="mapas_y_listas.html" class="card" style="text-decoration:none; color:inherit; display:block; transition: transform 0.2s;">
+        <h3>1. Mapas y Listas</h3>
+        <p>Sintaxis básica: indentación, tipos de datos, strings y estructuras anidadas.</p>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">10 Tareas →</span>
       </a>
-      <a href="detectar_errores.html" class="card" style="text-decoration:none; color:inherit;">
-        <h2>🐛 2. Detectar Errores</h2>
-        <p>Corrige YAML roto, evita tabs, booleanos accidentales y malas prácticas.</p>
+
+      <!-- Módulo 2 -->
+      <a href="detectar_errores.html" class="card" style="text-decoration:none; color:inherit; display:block; transition: transform 0.2s;">
+        <h3>2. Detectar Errores</h3>
+        <p>Identifica y corrige errores comunes: tabs, booleanos, indentación y sintaxis mixta.</p>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">10 Tareas →</span>
       </a>
-      <a href="validacion_herramientas.html" class="card" style="text-decoration:none; color:inherit;">
-        <h2>🛠️ 3. Validación</h2>
-        <p>Domina <code>yamllint</code>, <code>yq</code>, <code>docker compose config</code> y <code>dry-run</code>.</p>
+
+      <!-- Módulo 3 -->
+      <a href="validacion_herramientas.html" class="card" style="text-decoration:none; color:inherit; display:block; transition: transform 0.2s;">
+        <h3>3. Herramientas de Validación</h3>
+        <p>Domina yamllint, yq, docker compose config y kubectl --dry-run.</p>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">10 Tareas →</span>
       </a>
-      <a href="ciclo_de_vida.html" class="card" style="text-decoration:none; color:inherit;">
-        <h2>🔄 4. Ciclo de Vida</h2>
-        <p>Dependencias, healthchecks, políticas de reinicio y arranque seguro.</p>
+
+      <!-- Módulo 4 -->
+      <a href="ciclo_de_vida.html" class="card" style="text-decoration:none; color:inherit; display:block; transition: transform 0.2s;">
+        <h3>4. Ciclo de Vida</h3>
+        <p>Gestión de contenedores: restart, depends_on, healthchecks e init.</p>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">10 Tareas →</span>
       </a>
-      <a href="servicios_basicos.html" class="card" style="text-decoration:none; color:inherit;">
-        <h2>📦 5. Servicios Básicos</h2>
-        <p>De Nginx simple a WordPress+MySQL con aislamiento y buenas prácticas.</p>
+
+      <!-- Módulo 5 -->
+      <a href="servicios_basicos.html" class="card" style="text-decoration:none; color:inherit; display:block; transition: transform 0.2s;">
+        <h3>5. Servicios Básicos</h3>
+        <p>Construye stacks multi-servicio: WordPress+MySQL, volúmenes y redes.</p>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">10 Tareas →</span>
       </a>
-      <a href="volumenes_redes_seguridad.html" class="card" style="text-decoration:none; color:inherit;">
-        <h2>🔒 6. Volúmenes y Seguridad</h2>
-        <p>Persistencia, redes privadas, read-only, drop capabilities y límites.</p>
+
+      <!-- Módulo 6 -->
+      <a href="volumenes_redes_seguridad.html" class="card" style="text-decoration:none; color:inherit; display:block; transition: transform 0.2s;">
+        <h3>6. Volúmenes y Seguridad</h3>
+        <p>Hardening: read_only, cap_drop, tmpfs, límites de recursos y redes internas.</p>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">10 Tareas →</span>
       </a>
-      <a href="kubernetes_vs_compose.html" class="card" style="text-decoration:none; color:inherit;">
-        <h2>☸️ 7. K8s vs Compose</h2>
-        <p>Traducción de manifiestos, equivalencias y despliegues multi-documento.</p>
+
+      <!-- Módulo 7 -->
+      <a href="kubernetes_vs_compose.html" class="card" style="text-decoration:none; color:inherit; display:block; transition: transform 0.2s;">
+        <h3>7. K8s vs Compose</h3>
+        <p>Traduce manifiestos: Deployments, Services, ConfigMaps y Secrets.</p>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">10 Tareas →</span>
       </a>
+
     </div>
   </main>
 
-  <div class="modal show" id="onboarding">
-    <div class="modal-content">
-      <h2>👋 ¿Primera vez aquí?</h2>
-      <p>No necesitas saber Docker ni YAML para empezar. Cada módulo incluye teoría clara, ejemplos visuales y un editor seguro donde practicarás sin romper nada en tu máquina.</p>
-      <button class="btn primary" id="btn-close-modal">Entendido, empezar</button>
-    </div>
-  </div>
-
+  <!-- ÚNICO SCRIPT GLOBAL -->
   <script src="app.js"></script>
 </body>
 </html>

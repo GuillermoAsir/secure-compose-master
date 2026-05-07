@@ -34,7 +34,7 @@ const App = {
         hint: 'La clave "host" y "puerto" deben estar sangradas respecto a "servicio".', 
         template: 'servicio:\n  host:\n  puerto:', 
         solution: 'servicio:\n  host: 192.168.1.10\n  puerto: 8080', 
-        keywords: ['servicio:', '  host:', '  puerto:'], 
+        keywords: ['servicio:', '  host:', '  ports:'], 
         xp: 100 
       },
       { 

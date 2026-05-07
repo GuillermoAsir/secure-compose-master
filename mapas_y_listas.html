@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>1. Mapas y Listas | Secure Compose Master</title>
+  <title>Módulo 1: Mapas y Listas | Secure Compose Master</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -24,14 +24,16 @@
   </header>
 
   <main>
+    <!-- NAVEGACIÓN DE PESTAÑAS -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
       <button class="tab-btn" data-tab="herramientas">🛠️ Referencia</button>
-      <button class="tab-btn" data-tab="editor">✏️ Editor</button>
+      <button class="tab-btn" data-tab="reto">✏️ Reto</button>
       <button class="tab-btn" data-tab="auditoria">🔍 Auditoría</button>
       <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
     </div>
 
+    <!-- PANEL: TEORÍA -->
     <div id="teoria" class="panel active">
       <div class="card">
         <h2>📦 ¿Qué son los Mapas y Listas en YAML?</h2>
@@ -54,6 +56,7 @@
       </div>
     </div>
 
+    <!-- PANEL: HERRAMIENTAS / REFERENCIA -->
     <div id="herramientas" class="panel">
       <div class="card">
         <h2>📋 Cheatsheet Rápido</h2>
@@ -68,22 +71,19 @@
       </div>
     </div>
 
-    <div id="editor" class="panel">
+    <!-- PANEL: RETO (DINÁMICO - GESTIÓN POR APP.JS) -->
+    <div id="reto" class="panel">
       <div class="card">
-        <h2>✏️ Ejercicio 1: Define un servicio básico</h2>
-        <p>Crea un bloque YAML que contenga: <code>nombre</code>, <code>version</code> (como string), y una lista de <code>puertos</code> con al menos 2 valores.</p>
-        <div class="editor-wrap">
-          <textarea id="yaml-editor" placeholder="Escribe tu YAML aquí..."></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
-          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
-        </div>
-        <div id="hint-box" class="hint-box"></div>
-        <div id="feedback" class="feedback"></div>
+        <h2>🎯 Selecciona una tarea para practicar</h2>
+        <p>Haz clic en cualquier tarjeta. Tu progreso y borradores se guardan automáticamente en el navegador.</p>
+        <!-- Aquí app.js inyectará el grid de 10 tareas -->
+        <div id="task-container"></div>
+        <!-- Aquí app.js inyectará el editor, plantillas y validación -->
+        <div id="task-editor" class="task-editor-area"></div>
       </div>
     </div>
 
+    <!-- PANEL: AUDITORÍA -->
     <div id="auditoria" class="panel">
       <div class="card">
         <h2>🔍 Auditoría Automática</h2>
@@ -98,6 +98,7 @@
       </div>
     </div>
 
+    <!-- PANEL: RESULTADOS -->
     <div id="resultados" class="panel">
       <div class="card">
         <h2>📊 Tu Progreso</h2>
@@ -110,10 +111,7 @@
     </div>
   </main>
 
+  <!-- ÚNICO SCRIPT GLOBAL -->
   <script src="app.js"></script>
-  <script>
-    // Inicializar lógica específica del módulo
-    document.addEventListener('DOMContentLoaded', () => App.setupEditor('ex_mapas_01'));
-  </script>
 </body>
 </html>

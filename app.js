@@ -21,9 +21,9 @@ const App = {
         type: 'code', 
         instruction: 'Define un servicio llamado "mi-app" con versión "3.8" (string) y expón los puertos 80 y 443.',
         hint: 'Recuerda usar comillas para la versión y alinear los guiones de la lista.', 
-        template: 'nombre:\nversion:\npuertos:\n  - \n  - ', 
-        solution: 'nombre: mi-app\nversion: "3.8"\npuertos:\n  - "80"\n  - "443"', 
-        keywords: ['nombre:', 'version:', '"3.8"', 'puertos:', '-', '80', '443'], 
+        template: 'nombre:\nversion:\nports:\n  - \n  - ', 
+        solution: 'nombre: mi-app\nversion: "3.8"\nports:\n  - "80"\n  - "443"', 
+        keywords: ['nombre:', 'version:', '"3.8"', 'ports:', '-', '80', '443'], 
         xp: 100 
       },
       { 
@@ -123,9 +123,9 @@ const App = {
         type: 'code', 
         instruction: 'Define una lista de servidores. El primero es "web01" con puertos 80 y 443.',
         hint: 'Combina mapa raíz (servidores), lista (- hostname) y lista interna (puertos).', 
-        template: 'servidores:\n  - hostname:\n    puertos:\n      - \n      - ', 
-        solution: 'servidores:\n  - hostname: web01\n    puertos:\n      - 80\n      - 443', 
-        keywords: ['servidores:', '- hostname:', 'puertos:', '  -'], 
+        template: 'servidores:\n  - hostname:\n    ports:\n      - \n      - ', 
+        solution: 'servidores:\n  - hostname: web01\n    ports:\n      - 80\n      - 443', 
+        keywords: ['servidores:', '- hostname:', 'ports:', '  -'], 
         xp: 120 
       }
     ],

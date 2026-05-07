@@ -24,14 +24,16 @@
   </header>
 
   <main>
+    <!-- NAVEGACIÓN DE PESTAÑAS -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
       <button class="tab-btn" data-tab="herramientas">🧰 Catálogo</button>
-      <button class="tab-btn" data-tab="reto">✏️ Simulador</button>
+      <button class="tab-btn" data-tab="reto">✏️ Reto</button>
       <button class="tab-btn" data-tab="checklist">📋 Decisión</button>
       <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
     </div>
 
+    <!-- PANEL: TEORÍA -->
     <div id="teoria" class="panel active">
       <div class="card">
         <h2>🔍 ¿Por qué validar antes de aplicar?</h2>
@@ -43,6 +45,7 @@
       </div>
     </div>
 
+    <!-- PANEL: HERRAMIENTAS / CATÁLOGO -->
     <div id="herramientas" class="panel">
       <div class="card">
         <h2>🧰 Catálogo de Validadores</h2>
@@ -71,35 +74,19 @@
       </div>
     </div>
 
+    <!-- PANEL: RETO (DINÁMICO - GESTIÓN POR APP.JS) -->
     <div id="reto" class="panel">
       <div class="card">
-        <h2>🎯 Simulador: Elige la herramienta correcta</h2>
-        <p><strong>Escenario 1:</strong> Tienes un <code>docker-compose.yml</code> que falla al arrancar. Quieres verificar si la sintaxis y la estructura específica de Compose son válidas <strong>sin levantar contenedores</strong>.</p>
-        <div class="editor-wrap">
-          <textarea id="yaml-editor" rows="3" placeholder="Escribe aquí el comando completo de validación..."></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
-          <button class="btn primary" id="btn-validate">✅ Validar Comando</button>
-        </div>
-        <div id="hint-box" class="hint-box"></div>
-        <div id="feedback" class="feedback"></div>
-
-        <hr style="border:none; border-top:1px solid var(--border); margin:1.5rem 0;">
-
-        <p><strong>Escenario 2:</strong> Tienes un manifiesto de Kubernetes con múltiples documentos (<code>---</code>). Quieres validar que la estructura coincide con la API de K8s antes de aplicar.</p>
-        <div class="editor-wrap">
-          <textarea id="yaml-editor-k8s" rows="3" placeholder="Escribe aquí el comando completo de validación..."></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn secondary" id="btn-hint-k8s">💡 Ver Pista</button>
-          <button class="btn primary" id="btn-validate-k8s">✅ Validar Comando</button>
-        </div>
-        <div id="hint-box-k8s" class="hint-box"></div>
-        <div id="feedback-k8s" class="feedback"></div>
+        <h2>🎯 Selecciona una tarea para practicar</h2>
+        <p>Haz clic en cualquier tarjeta. Tu progreso y borradores se guardan automáticamente en el navegador.</p>
+        <!-- Aquí app.js inyectará el grid de 10 tareas -->
+        <div id="task-container"></div>
+        <!-- Aquí app.js inyectará el editor, plantillas y validación -->
+        <div id="task-editor" class="task-editor-area"></div>
       </div>
     </div>
 
+    <!-- PANEL: CHECKLIST / DECISIÓN -->
     <div id="checklist" class="panel">
       <div class="card">
         <h2>📋 Árbol de Decisión Rápido</h2>
@@ -114,6 +101,7 @@
       </div>
     </div>
 
+    <!-- PANEL: RESULTADOS -->
     <div id="resultados" class="panel">
       <div class="card">
         <h2>📊 Tu Progreso</h2>
@@ -126,55 +114,7 @@
     </div>
   </main>
 
+  <!-- ÚNICO SCRIPT GLOBAL -->
   <script src="app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      App.setupEditor('ex_validacion_01');
-
-      // Escenario 1: Docker Compose
-      const hint1 = document.getElementById('btn-hint');
-      const validate1 = document.getElementById('btn-validate');
-      const fb1 = document.getElementById('feedback');
-      const hintBox1 = document.getElementById('hint-box');
-      const editor1 = document.getElementById('yaml-editor');
-
-      hint1?.addEventListener('click', () => {
-        hintBox1.classList.toggle('show');
-        hintBox1.innerHTML = '💡 <strong>Pista:</strong> Busca el comando de Compose que valida el archivo sin arrancar nada. Añade <code>--quiet</code> para ver solo errores.';
-      });
-
-      validate1?.addEventListener('click', () => {
-        const cmd = (editor1?.value || '').trim().toLowerCase();
-        const isValid = cmd.includes('docker') && cmd.includes('compose') && cmd.includes('config');
-        fb1.className = `feedback show ${isValid ? 'success' : 'error'}`;
-        fb1.innerHTML = isValid 
-          ? '✅ <strong>¡Correcto!</strong> <code>docker compose config</code> valida sintaxis + lógica Compose. +100 XP' 
-          : '❌ <strong>Revisa:</strong> El comando debe incluir <code>docker compose config</code>. No arranca contenedores.';
-        if(isValid) App.addXP(100, 'ex_validacion_01');
-      });
-
-      // Escenario 2: Kubernetes
-      const hint2 = document.getElementById('btn-hint-k8s');
-      const validate2 = document.getElementById('btn-validate-k8s');
-      const fb2 = document.getElementById('feedback-k8s');
-      const hintBox2 = document.getElementById('hint-box-k8s');
-      const editor2 = document.getElementById('yaml-editor-k8s');
-
-      hint2?.addEventListener('click', () => {
-        hintBox2.classList.toggle('show');
-        hintBox2.innerHTML = '💡 <strong>Pista:</strong> Usa <code>kubectl apply</code> con la bandera de ejecución simulada. <code>client</code> valida localmente contra el esquema.';
-      });
-
-      validate2?.addEventListener('click', () => {
-        const cmd = (editor2?.value || '').trim().toLowerCase();
-        const isValid = cmd.includes('kubectl') && cmd.includes('apply') && cmd.includes('dry-run');
-        fb2.className = `feedback show ${isValid ? 'success' : 'error'}`;
-        fb2.innerHTML = isValid 
-          ? '✅ <strong>¡Correcto!</strong> <code>--dry-run=client</code> valida contra el esquema local sin contactar al API server. +100 XP' 
-          : '❌ <strong>Revisa:</strong> El comando debe ser <code>kubectl apply -f archivo --dry-run=client</code>.';
-        if(isValid) App.addXP(100, 'ex_validacion_02');
-      });
-    });
-  </script>
 </body>
 </html>

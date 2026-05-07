@@ -24,14 +24,16 @@
   </header>
 
   <main>
+    <!-- NAVEGACIÓN DE PESTAÑAS -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
       <button class="tab-btn" data-tab="referencia">📋 Equivalencias</button>
-      <button class="tab-btn" data-tab="reto">✏️ Traducción</button>
+      <button class="tab-btn" data-tab="reto">✏️ Reto</button>
       <button class="tab-btn" data-tab="checklist">🔍 Checklist</button>
       <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
     </div>
 
+    <!-- PANEL: TEORÍA -->
     <div id="teoria" class="panel active">
       <div class="card">
         <h2>🌐 De Orquestador Local a Clúster Distribuido</h2>
@@ -46,6 +48,7 @@
       </div>
     </div>
 
+    <!-- PANEL: REFERENCIA / EQUIVALENCIAS -->
     <div id="referencia" class="panel">
       <div class="card">
         <h2>📋 Tabla de Equivalencias</h2>
@@ -62,27 +65,19 @@
       </div>
     </div>
 
+    <!-- PANEL: RETO (DINÁMICO - GESTIÓN POR APP.JS) -->
     <div id="reto" class="panel">
       <div class="card">
-        <h2>🎯 Reto: Traduce Nginx a K8s</h2>
-        <p>Convierte este bloque Compose a un manifiesto K8s multi-documento con <strong>Deployment</strong> (2 réplicas) y <strong>Service</strong> (NodePort 30080):</p>
-        <pre style="margin:0.5rem 0; font-size:0.9rem;">services:
-  web:
-    image: nginx:1.27-alpine
-    ports:
-      - "8080:80"</pre>
-        <div class="editor-wrap">
-          <textarea id="yaml-editor" rows="14" placeholder="# Escribe aquí el manifiesto K8s..."></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
-          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
-        </div>
-        <div id="hint-box" class="hint-box"></div>
-        <div id="feedback" class="feedback"></div>
+        <h2>🎯 Selecciona una tarea para practicar</h2>
+        <p>Haz clic en cualquier tarjeta. Tu progreso y borradores se guardan automáticamente en el navegador.</p>
+        <!-- Aquí app.js inyectará el grid de 10 tareas -->
+        <div id="task-container"></div>
+        <!-- Aquí app.js inyectará el editor, plantillas y validación -->
+        <div id="task-editor" class="task-editor-area"></div>
       </div>
     </div>
 
+    <!-- PANEL: CHECKLIST -->
     <div id="checklist" class="panel">
       <div class="card">
         <h2>🔍 Checklist de Traducción K8s</h2>
@@ -97,6 +92,7 @@
       </div>
     </div>
 
+    <!-- PANEL: RESULTADOS -->
     <div id="resultados" class="panel">
       <div class="card">
         <h2>📊 Tu Progreso</h2>
@@ -109,43 +105,7 @@
     </div>
   </main>
 
+  <!-- ÚNICO SCRIPT GLOBAL -->
   <script src="app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      App.setupEditor('ex_k8s_01');
-      const editor = document.getElementById('yaml-editor');
-      const hintBtn = document.getElementById('btn-hint');
-      const validateBtn = document.getElementById('btn-validate');
-      const hintBox = document.getElementById('hint-box');
-      const feedback = document.getElementById('feedback');
-
-      hintBtn?.addEventListener('click', () => {
-        hintBox.classList.toggle('show');
-        hintBox.innerHTML = '💡 <strong>Pistas progresivas:</strong><br>1. Primer doc: <code>apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.27-alpine\n        ports:\n        - containerPort: 80</code><br>2. Separador: <code>---</code><br>3. Segundo doc: <code>apiVersion: v1\nkind: Service\nmetadata:\n  name: web-svc\nspec:\n  type: NodePort\n  selector:\n    app: web\n  ports:\n  - port: 80\n    targetPort: 80\n    nodePort: 30080</code>';
-      });
-
-      validateBtn?.addEventListener('click', () => {
-        const val = (editor?.value || '').trim().toLowerCase();
-        const checks = [
-          val.includes('apiversion:') && val.includes('apps/v1'),
-          val.includes('kind: deployment') && val.includes('replicas: 2'),
-          val.includes('matchlabels:') && val.includes('template:'),
-          val.includes('---'),
-          val.includes('kind: service') && val.includes('nodeport') && val.includes('30080')
-        ];
-        const passed = checks.filter(Boolean).length;
-        feedback.classList.add('show');
-        
-        if(passed >= 4) {
-          feedback.className = 'feedback success';
-          feedback.innerHTML = `✅ <strong>¡Traducción correcta!</strong> ${passed}/5 estructuras K8s válidas. Multi-documento bien formado. +200 XP`;
-          App.addXP(200, 'ex_k8s_01');
-        } else {
-          feedback.className = 'feedback error';
-          feedback.innerHTML = `⚠️ <strong>Revisa:</strong> ${passed}/5 requisitos. Verifica que el <code>selector</code> del Service coincide con el <code>label</code> del Deployment, y que los documentos están separados por <code>---</code>.`;
-        }
-      });
-    });
-  </script>
 </body>
 </html>

@@ -24,6 +24,7 @@
   </header>
 
   <main>
+    <!-- NAVEGACIÓN DE PESTAÑAS -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="teoria">📖 Teoría</button>
       <button class="tab-btn" data-tab="referencia">📋 Referencia</button>
@@ -32,6 +33,7 @@
       <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
     </div>
 
+    <!-- PANEL: TEORÍA -->
     <div id="teoria" class="panel active">
       <div class="card">
         <h2>⚙️ Controlando el arranque y la resiliencia</h2>
@@ -47,6 +49,7 @@
       </div>
     </div>
 
+    <!-- PANEL: REFERENCIA -->
     <div id="referencia" class="panel">
       <div class="card">
         <h2>📋 Tablas de Referencia Rápida</h2>
@@ -70,33 +73,19 @@
       </div>
     </div>
 
+    <!-- PANEL: RETO (DINÁMICO - GESTIÓN POR APP.JS) -->
     <div id="reto" class="panel">
       <div class="card">
-        <h2>🎯 Reto: Configura arranque seguro y dependencias reales</h2>
-        <p>Completa el bloque YAML para que:
-          <ol style="margin:0.5rem 0; padding-left:1.2rem;">
-            <li>Use <code>restart: unless-stopped</code></li>
-            <li>Defina un <code>healthcheck</code> válido contra <code>/health</code></li>
-            <li>Espera a <code>db</code> con <code>condition: service_healthy</code></li>
-            <li>Active <code>init: true</code></li>
-          </ol>
-        </p>
-        <div class="editor-wrap">
-          <textarea id="yaml-editor" rows="12" placeholder="services:
-  app:
-    image: node:20-alpine
-    # ... completa aquí ...
-"></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn secondary" id="btn-hint">💡 Ver Pista</button>
-          <button class="btn primary" id="btn-validate">✅ Validar Código</button>
-        </div>
-        <div id="hint-box" class="hint-box"></div>
-        <div id="feedback" class="feedback"></div>
+        <h2>🎯 Selecciona una tarea para practicar</h2>
+        <p>Haz clic en cualquier tarjeta. Tu progreso y borradores se guardan automáticamente en el navegador.</p>
+        <!-- Aquí app.js inyectará el grid de 10 tareas -->
+        <div id="task-container"></div>
+        <!-- Aquí app.js inyectará el editor, plantillas y validación -->
+        <div id="task-editor" class="task-editor-area"></div>
       </div>
     </div>
 
+    <!-- PANEL: CHECKLIST -->
     <div id="checklist" class="panel">
       <div class="card">
         <h2>🔍 Árbol de Decisiones: ¿Qué clave uso?</h2>
@@ -111,6 +100,7 @@
       </div>
     </div>
 
+    <!-- PANEL: RESULTADOS -->
     <div id="resultados" class="panel">
       <div class="card">
         <h2>📊 Tu Progreso</h2>
@@ -123,42 +113,7 @@
     </div>
   </main>
 
+  <!-- ÚNICO SCRIPT GLOBAL -->
   <script src="app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      App.setupEditor('ex_ciclo_01');
-      const editor = document.getElementById('yaml-editor');
-      const hintBtn = document.getElementById('btn-hint');
-      const validateBtn = document.getElementById('btn-validate');
-      const hintBox = document.getElementById('hint-box');
-      const feedback = document.getElementById('feedback');
-
-      hintBtn?.addEventListener('click', () => {
-        hintBox.classList.toggle('show');
-        hintBox.innerHTML = '💡 <strong>Pistas progresivas:</strong><br>1. <code>restart:</code> va al mismo nivel que <code>image:</code><br>2. <code>healthcheck:</code> requiere <code>test:</code>, <code>interval:</code>, <code>timeout:</code>, <code>retries:</code><br>3. <code>depends_on:</code> es un mapa, no lista. Usa <code>db:\n  condition: service_healthy</code><br>4. <code>init: true</code> es booleano real (sin comillas).';
-      });
-
-      validateBtn?.addEventListener('click', () => {
-        const val = (editor?.value || '').trim().toLowerCase();
-        const checks = [
-          val.includes('restart:') && val.includes('unless-stopped'),
-          val.includes('healthcheck:') && val.includes('test:') && val.includes('interval:'),
-          val.includes('depends_on:') && val.includes('condition: service_healthy'),
-          val.includes('init: true') || val.includes("init: 'true'") || val.includes("init: \"true\"")
-        ];
-        const passed = checks.filter(Boolean).length;
-        feedback.classList.add('show');
-        
-        if(passed >= 3) {
-          feedback.className = 'feedback success';
-          feedback.innerHTML = `✅ <strong>¡Excelente!</strong> ${passed}/4 requisitos cumplidos. Estructura de ciclo de vida correcta. +150 XP`;
-          App.addXP(150, 'ex_ciclo_01');
-        } else {
-          feedback.className = 'feedback error';
-          feedback.innerHTML = `⚠️ <strong>Revisa:</strong> Has cumplido ${passed}/4 puntos. Verifica indentación, booleanos reales y la estructura de mapa en <code>depends_on</code>.`;
-        }
-      });
-    });
-  </script>
 </body>
 </html>

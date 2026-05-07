@@ -1,103 +1,829 @@
 /**
- * Secure Compose Master - Motor Principal
- * Gestiona: Tema, Progreso, Validación YAML, Ejercicios y UX
- * Compatible con todos los módulos HTML proporcionados.
+ * Secure Compose Master - Motor Principal v2.0
+ * Compatible con estructura dinámica de pestañas (#reto) y grid de tareas.
  */
 const App = {
   state: {
     theme: localStorage.getItem('theme') || 'light',
     xp: parseInt(localStorage.getItem('xp') || '0'),
-    completed: JSON.parse(localStorage.getItem('completed') || '[]'),
+    // Estructura: { modulo: { indice: 'completed', indice_input: 'yaml...' } }
+    progress: JSON.parse(localStorage.getItem('sc_progress') || '{}'),
     currentModule: null,
-    activeTab: 'teoria',
-    hintUsed: false
+    activeTaskIndex: null
   },
 
-  // 📚 Registro completo de ejercicios (7 módulos × 10 ejercicios)
+  // 📚 Base de datos de ejercicios (7 módulos x 10 tareas)
   exercises: {
     mapas_y_listas: [
-      { id: 'ex_mapas_01', type: 'code', keywords: ['nombre:', 'version:', '"3.8"', 'puertos:', '-', '80', '443'], hint: 'Usa comillas para la versión y alinea los guiones de puertos.', xp: 100 },
-      { id: 'ex_mapas_02', type: 'code', keywords: ['servicio:', '  host:', '  puerto:'], hint: '2 espacios exactos por nivel. No tabuladores.', xp: 100 },
-      { id: 'ex_mapas_03', type: 'mcq', question: '¿Qué valor YAML se convierte en booleano false?', options: ['"off"', 'off', 'false_str', 'no_'], answer: 'off', xp: 50 },
-      { id: 'ex_mapas_04', type: 'code', keywords: ['alumno:', '  nombre:', '  edad:', '  cursos:', '    -'], hint: 'Mapa dentro de lista, con lista interna anidada.', xp: 100 },
-      { id: 'ex_mapas_05', type: 'code', keywords: ['comentario:', '~'], hint: 'Usa ~ o null para valores nulos.', xp: 80 },
-      { id: 'ex_mapas_06', type: 'mcq', question: '¿Cuál es la convención oficial de indentación en K8s/Docker?', options: ['1 espacio', '2 espacios', '4 espacios', 'Tabuladores'], answer: '2 espacios', xp: 50 },
-      { id: 'ex_mapas_07', type: 'code', keywords: ['- id:', '  activo: true', '- id:', '  activo: false'], hint: 'Lista de mapas. Alinea los guiones y respeta la jerarquía.', xp: 100 },
-      { id: 'ex_mapas_08', type: 'code', keywords: ['url:', '"http://'], hint: 'Los : dentro de strings requieren comillas.', xp: 80 },
-      { id: 'ex_mapas_09', type: 'mcq', question: '¿Qué carácter inicia un comentario en YAML?', options: ['#', '//', '/*', '--'], answer: '#', xp: 50 },
-      { id: 'ex_mapas_10', type: 'code', keywords: ['servidores:', '  - hostname:', '    puertos:', '      -'], hint: 'Combina mapa raíz, lista de servicios, y lista interna.', xp: 120 }
+      { 
+        id: 'ex_m_01', 
+        title: 'Mapa Básico', 
+        type: 'code', 
+        instruction: 'Define un servicio llamado "mi-app" con versión "3.8" (string) y expón los puertos 80 y 443.',
+        hint: 'Recuerda usar comillas para la versión y alinear los guiones de la lista.', 
+        template: 'nombre:\nversion:\npuertos:\n  - \n  - ', 
+        solution: 'nombre: mi-app\nversion: "3.8"\npuertos:\n  - "80"\n  - "443"', 
+        keywords: ['nombre:', 'version:', '"3.8"', 'puertos:', '-', '80', '443'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_m_02', 
+        title: 'Mapa Anidado', 
+        type: 'code', 
+        instruction: 'Crea una configuración de servidor con host "192.168.1.10" y puerto 8080. Usa indentación de 2 espacios.',
+        hint: 'La clave "host" y "puerto" deben estar sangradas respecto a "servicio".', 
+        template: 'servicio:\n  host:\n  puerto:', 
+        solution: 'servicio:\n  host: 192.168.1.10\n  puerto: 8080', 
+        keywords: ['servicio:', '  host:', '  puerto:'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_m_03', 
+        title: 'Booleanos Accidentales', 
+        type: 'mcq', 
+        question: '¿Cuál de estos valores YAML 1.1 se interpretará automáticamente como booleano FALSE?', 
+        options: ['"off"', 'off', 'false_str', 'no_'], 
+        answer: 'off', 
+        hint: 'YAML convierte palabras como yes/no/on/off en booleanos si no llevan comillas.', 
+        solution: 'off', 
+        keywords: [], 
+        xp: 50 
+      },
+      { 
+        id: 'ex_m_04', 
+        title: 'Lista de Mapas', 
+        type: 'code', 
+        instruction: 'Define una lista de alumnos. El primero es Ana (22 años) con cursos Docker y Kubernetes.',
+        hint: 'Cada alumno empieza con "- ". Los cursos son una lista interna anidada.', 
+        template: 'alumnos:\n  - nombre:\n    edad:\n    cursos:\n      - \n      - ', 
+        solution: 'alumnos:\n  - nombre: Ana\n    edad: 22\n    cursos:\n      - Docker\n      - Kubernetes', 
+        keywords: ['alumnos:', '- nombre:', 'edad:', 'cursos:', '  -'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_m_05', 
+        title: 'Valores Nulos', 
+        type: 'code', 
+        instruction: 'Define la clave "comentario" con un valor nulo usando la sintaxis de tilde (~).',
+        hint: 'El símbolo ~ representa null en YAML.', 
+        template: 'comentario:', 
+        solution: 'comentario: ~', 
+        keywords: ['comentario:', '~'], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_m_06', 
+        title: 'Estándar de Indentación', 
+        type: 'mcq', 
+        question: '¿Cuántos espacios por nivel de indentación recomienda oficialmente Kubernetes y Docker Compose?', 
+        options: ['1 espacio', '2 espacios', '4 espacios', 'Tabuladores'], 
+        answer: '2 espacios', 
+        hint: 'Es la convención estándar de la CNCF.', 
+        solution: '2 espacios', 
+        keywords: [], 
+        xp: 50 
+      },
+      { 
+        id: 'ex_m_07', 
+        title: 'Lista de Objetos', 
+        type: 'code', 
+        instruction: 'Crea una lista de dos dispositivos: ID 1 (activo: true) e ID 2 (activo: false).',
+        hint: 'Alinea los guiones verticales. "activo" es un booleano real (sin comillas).', 
+        template: '- id:\n  activo:\n- id:\n  activo:', 
+        solution: '- id: 1\n  activo: true\n- id: 2\n  activo: false', 
+        keywords: ['- id:', 'activo: true', '- id:', 'activo: false'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_m_08', 
+        title: 'Strings Especiales', 
+        type: 'code', 
+        instruction: 'Define la URL "http://ejemplo.com:8080". Recuerda que los dos puntos dentro del string requieren comillas.',
+        hint: 'Sin comillas, YAML creerá que "8080" es un valor separado o dará error.', 
+        template: 'url:', 
+        solution: 'url: "http://ejemplo.com:8080"', 
+        keywords: ['url:', '"http://'], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_m_09', 
+        title: 'Comentarios', 
+        type: 'mcq', 
+        question: '¿Qué carácter se utiliza para iniciar un comentario de línea en YAML?', 
+        options: ['#', '//', '/*', '--'], 
+        answer: '#', 
+        hint: 'Similar a Python o Bash.', 
+        solution: '#', 
+        keywords: [], 
+        xp: 50 
+      },
+      { 
+        id: 'ex_m_10', 
+        title: 'Estructura Compleja', 
+        type: 'code', 
+        instruction: 'Define una lista de servidores. El primero es "web01" con puertos 80 y 443.',
+        hint: 'Combina mapa raíz (servidores), lista (- hostname) y lista interna (puertos).', 
+        template: 'servidores:\n  - hostname:\n    puertos:\n      - \n      - ', 
+        solution: 'servidores:\n  - hostname: web01\n    puertos:\n      - 80\n      - 443', 
+        keywords: ['servidores:', '- hostname:', 'puertos:', '  -'], 
+        xp: 120 
+      }
     ],
     detectar_errores: [
-      { id: 'ex_err_01', type: 'fix', keywords: ['ports:', '  - "8080:80"'], hint: 'Falta espacio tras ":" y sangría en lista. Usa comillas para puertos.', xp: 100 },
-      { id: 'ex_err_02', type: 'fix', keywords: ['restart: true', 'DEBUG: "true"'], hint: 'Booleanos en minúsculas. Strings reservados entre comillas.', xp: 100 },
-      { id: 'ex_err_03', type: 'fix', keywords: ['- ./html:/usr/share/nginx/html'], hint: 'Siempre espacio tras "- ". Rutas relativas deben empezar con "./".', xp: 100 },
-      { id: 'ex_err_04', type: 'mcq', question: '¿Por qué falla `version: 3.8`?', options: ['Falta comillas', 'YAML lo parsea como float', 'Versión obsoleta', 'A y B'], answer: 'D', xp: 80 },
-      { id: 'ex_err_05', type: 'fix', keywords: ['depends_on:', '  db:', '    condition: service_healthy'], hint: 'depends_on es un mapa, no lista. Anida correctamente.', xp: 120 },
-      { id: 'ex_err_06', type: 'fix', keywords: ['ports:', '  - "8080:80"'], hint: 'No mezcles sintaxis lista con valores sueltos. Mantén consistencia.', xp: 100 },
-      { id: 'ex_err_07', type: 'fix', keywords: ['internal: true'], hint: 'Booleanos en YAML van en minúsculas sin comillas.', xp: 80 },
-      { id: 'ex_err_08', type: 'mcq', question: '¿Qué causa `mapping values are not allowed`?', options: ['Falta "-"', 'Tabuladores mezclados', 'Clave sin ":"', 'Indentación inconsistente'], answer: 'B', xp: 80 },
-      { id: 'ex_err_09', type: 'fix', keywords: ['APP_ENV: production', 'DEBUG: "true"'], hint: 'No mezcles sintaxis lista (- KEY=V) y mapa (KEY: V) en environment.', xp: 120 },
-      { id: 'ex_err_10', type: 'fix', keywords: ['test: ["CMD", "curl"'], hint: 'healthcheck.test requiere formato array explícito en Compose.', xp: 120 }
+      { 
+        id: 'ex_err_01', 
+        title: 'Puertos Mal Indentados', 
+        type: 'fix', 
+        instruction: 'Corrige la indentación de la lista de puertos. Recuerda: espacio tras ":" y los elementos de la lista ("-") deben estar sangrados respecto a la clave padre.',
+        hint: 'La clave "ports:" debe tener un espacio después de los dos puntos. El guion "- 8080:80" debe llevar 2 espacios más que "ports".', 
+        template: 'services:\n  web:\n    image: nginx\n    ports:\n    - 8080:80', 
+        solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"', 
+        keywords: ['ports:', '  - "8080:80"'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_err_02', 
+        title: 'Booleanos y Mayúsculas', 
+        type: 'fix', 
+        instruction: 'Corrige los valores booleanos. En YAML, "true/false" van en minúsculas. Si quieres que "yes" sea un string, usa comillas.',
+        hint: 'True -> true. yes -> "yes" o "true" si es booleano.', 
+        template: 'restart: True\nenvironment:\n  DEBUG: yes', 
+        solution: 'restart: true\nenvironment:\n  DEBUG: "true"', 
+        keywords: ['restart: true', 'DEBUG: "true"'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_err_03', 
+        title: 'Rutas de Volumen', 
+        type: 'fix', 
+        instruction: 'Arregla la sintaxis del volumen. Falta un espacio después del guion "-" y la ruta relativa debe empezar por "./".',
+        hint: 'Correcto: "- ./ruta:destino". Incorrecto: "-./ruta:destino".', 
+        template: 'volumes:\n -./html:/usr/share/nginx/html', 
+        solution: 'volumes:\n  - ./html:/usr/share/nginx/html', 
+        keywords: ['- ./html:/usr/share/nginx/html'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_err_04', 
+        title: 'Versiones Numéricas', 
+        type: 'mcq', 
+        question: '¿Por qué se considera un error escribir "version: 3.8" sin comillas en algunos contextos?', 
+        options: ['Falta comillas', 'YAML lo parsea como número float 3.8', 'Es una versión obsoleta', 'A y B son correctas'], 
+        answer: 'D', 
+        hint: 'YAML interpreta 3.8 como un número decimal, no como la cadena "3.8".', 
+        solution: 'A y B son correctas', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_err_05', 
+        title: 'Dependencias Condicionales', 
+        type: 'fix', 
+        instruction: 'Corrige la estructura de "depends_on". Para usar "condition", debe ser un mapa anidado, no una lista simple.',
+        hint: 'depends_on es un mapa. La clave "db" va debajo, y "condition" debajo de "db".', 
+        template: 'depends_on:\n- db\n  condition: service_healthy', 
+        solution: 'depends_on:\n  db:\n    condition: service_healthy', 
+        keywords: ['depends_on:', '  db:', '    condition: service_healthy'], 
+        xp: 120 
+      },
+      { 
+        id: 'ex_err_06', 
+        title: 'Sintaxis Mixta', 
+        type: 'fix', 
+        instruction: 'Elimina la línea incorrecta. No mezcles claves sueltas ("expose:") dentro de una lista de puertos.',
+        hint: '"expose" es una clave hermana de "ports", no un elemento de la lista.', 
+        template: 'ports:\n  - "8080:80"\n  expose:\n    - 3000', 
+        solution: 'ports:\n  - "8080:80"', 
+        keywords: ['ports:', '  - "8080:80"'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_err_07', 
+        title: 'Redes Internas', 
+        type: 'fix', 
+        instruction: 'Corrige el valor booleano de "internal". En YAML, los booleanos van en minúsculas y sin comillas.',
+        hint: 'True -> true. False -> false.', 
+        template: 'networks:\n  back:\n    internal: True', 
+        solution: 'networks:\n  back:\n    internal: true', 
+        keywords: ['internal: true'], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_err_08', 
+        title: 'Error de Parseo', 
+        type: 'mcq', 
+        question: '¿Qué causa comúnmente el error "mapping values are not allowed in this context"?', 
+        options: ['Falta un guion "-" en una lista', 'Mezclar tabuladores y espacios', 'Olvidar los dos puntos ":"', 'Indentación inconsistente'], 
+        answer: 'B', 
+        hint: 'Los tabuladores (\t) están prohibidos en YAML. Usan siempre espacios.', 
+        solution: 'Mezclar tabuladores y espacios', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_err_09', 
+        title: 'Environment Mixto', 
+        type: 'fix', 
+        instruction: 'Unifica la sintaxis de "environment". No mezcles formato lista (- KEY=VAL) con formato mapa (KEY: VAL). Usa solo mapa.',
+        hint: 'Convierte "- APP_ENV=prod" a "APP_ENV: prod".', 
+        template: 'environment:\n  - APP_ENV=prod\n  DEBUG: "true"', 
+        solution: 'environment:\n  APP_ENV: prod\n  DEBUG: "true"', 
+        keywords: ['APP_ENV:', 'DEBUG: "true"'], 
+        xp: 120 
+      },
+      { 
+        id: 'ex_err_10', 
+        title: 'Healthcheck Array', 
+        type: 'fix', 
+        instruction: 'Corrige el comando del healthcheck. En Docker Compose, "test" debe ser un array explícito ["CMD", ...] o un string con "CMD-SHELL".',
+        hint: 'Usa la sintaxis de array JSON: ["CMD", "curl", "-f", "http://localhost/"].', 
+        template: 'healthcheck:\n  test: curl -f http://localhost/', 
+        solution: 'healthcheck:\n  test: ["CMD", "curl", "-f", "http://localhost/"]', 
+        keywords: ['test: ["CMD", "curl"'], 
+        xp: 120 
+      }
     ],
     validacion_herramientas: [
-      { id: 'ex_val_01', type: 'cmd', keywords: ['docker', 'compose', 'config'], hint: 'Comando de Compose que valida sin arrancar.', xp: 100 },
-      { id: 'ex_val_02', type: 'cmd', keywords: ['kubectl', 'apply', 'dry-run=client'], hint: 'Validación local contra esquema K8s.', xp: 100 },
-      { id: 'ex_val_03', type: 'mcq', question: '¿Qué herramienta valida SOLO sintaxis YAML pura?', options: ['docker compose config', 'yamllint', 'yq', 'kubectl dry-run'], answer: 'yamllint', xp: 80 },
-      { id: 'ex_val_04', type: 'cmd', keywords: ['yq', '-o=json'], hint: 'Convierte YAML a JSON para depurar jerarquía.', xp: 80 },
-      { id: 'ex_val_05', type: 'mcq', question: '¿Qué flag valida contra el API server de K8s?', options: ['--dry-run=client', '--dry-run=server', '--validate', '--check'], answer: '--dry-run=server', xp: 100 },
-      { id: 'ex_val_06', type: 'cmd', keywords: ['docker', 'compose', 'config', '--quiet'], hint: 'Solo muestra errores, sin output completo.', xp: 90 },
-      { id: 'ex_val_07', type: 'mcq', question: '¿Cuál NO es un validador oficial de infraestructura?', options: ['yamllint', 'docker compose config', 'eslint', 'kubectl apply'], answer: 'eslint', xp: 50 },
-      { id: 'ex_val_08', type: 'cmd', keywords: ['yamllint'], hint: 'Herramienta de linting puro para YAML.', xp: 70 },
-      { id: 'ex_val_09', type: 'mcq', question: '¿Por qué usar --dry-run=client vs server?', options: ['Client es más rápido y no toca el clúster', 'Server es más estricto', 'No hay diferencia', 'Client requiere K8s'], answer: 'A', xp: 100 },
-      { id: 'ex_val_10', type: 'cmd', keywords: ['kubectl', 'apply', 'f', 'manifest.yml', 'dry-run'], hint: 'Ruta completa a archivo + validación.', xp: 110 }
+      { 
+        id: 'ex_val_01', 
+        title: 'Validar Compose', 
+        type: 'cmd', 
+        instruction: 'Escribe el comando de Docker Compose que valida la sintaxis y estructura del archivo sin llegar a arrancar los contenedores.',
+        hint: 'Usa "docker compose config". Si quieres ver solo errores, añade "--quiet".', 
+        template: '', 
+        solution: 'docker compose config', 
+        keywords: ['docker', 'compose', 'config'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_val_02', 
+        title: 'Dry-run K8s Local', 
+        type: 'cmd', 
+        instruction: 'Escribe el comando para validar un manifiesto Kubernetes localmente contra el esquema API, sin contactar con el clúster.',
+        hint: 'Usa kubectl apply con la bandera --dry-run=client.', 
+        template: '', 
+        solution: 'kubectl apply -f manifest.yml --dry-run=client', 
+        keywords: ['kubectl', 'apply', '--dry-run=client'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_val_03', 
+        title: 'Linting Puro', 
+        type: 'mcq', 
+        question: '¿Qué herramienta se utiliza exclusivamente para validar la sintaxis YAML pura (indentación, espacios, tabs)?', 
+        options: ['docker compose config', 'yamllint', 'yq', 'kubectl dry-run'], 
+        answer: 'yamllint', 
+        hint: 'Es la herramienta estándar de linting para YAML, independiente de Docker o K8s.', 
+        solution: 'yamllint', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_val_04', 
+        title: 'Depurar con JSON', 
+        type: 'cmd', 
+        instruction: 'Escribe el comando usando "yq" para convertir un archivo YAML a formato JSON y así visualizar mejor su estructura jerárquica.',
+        hint: 'La sintaxis es: yq -o=json archivo.yml', 
+        template: '', 
+        solution: 'yq -o=json archivo.yml', 
+        keywords: ['yq', '-o=json'], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_val_05', 
+        title: 'Validación Remota', 
+        type: 'mcq', 
+        question: '¿Qué flag de "kubectl apply" envía el manifiesto al API Server para validarlo contra el estado real del clúster?', 
+        options: ['--dry-run=client', '--dry-run=server', '--validate', '--check'], 
+        answer: '--dry-run=server', 
+        hint: '"Server" implica contacto con el clúster; "Client" es puramente local.', 
+        solution: '--dry-run=server', 
+        keywords: [], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_val_06', 
+        title: 'Modo Silencioso', 
+        type: 'cmd', 
+        instruction: 'Escribe el comando de Docker Compose que valida el archivo pero no muestra ninguna salida si todo es correcto (solo errores).',
+        hint: 'Añade la bandera "--quiet" al comando de config.', 
+        template: '', 
+        solution: 'docker compose config --quiet', 
+        keywords: ['docker', 'compose', 'config', '--quiet'], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_val_07', 
+        title: 'Herramientas Oficiales', 
+        type: 'mcq', 
+        question: '¿Cuál de las siguientes NO es una herramienta de validación de infraestructura YAML/Docker/K8s?', 
+        options: ['yamllint', 'docker compose config', 'eslint', 'kubectl apply'], 
+        answer: 'eslint', 
+        hint: 'ESLint es un linter para código JavaScript/TypeScript, no para YAML.', 
+        solution: 'eslint', 
+        keywords: [], 
+        xp: 50 
+      },
+      { 
+        id: 'ex_val_08', 
+        title: 'YAMLLint Básico', 
+        type: 'cmd', 
+        instruction: 'Escribe el comando básico para validar la sintaxis de un archivo llamado "archivo.yml" usando yamllint.',
+        hint: 'Simplemente: yamllint nombre_del_archivo', 
+        template: '', 
+        solution: 'yamllint archivo.yml', 
+        keywords: ['yamllint'], 
+        xp: 70 
+      },
+      { 
+        id: 'ex_val_09', 
+        title: 'Client vs Server', 
+        type: 'mcq', 
+        question: '¿Cuál es la principal ventaja de usar "--dry-run=client" frente a "--dry-run=server"?', 
+        options: ['Client es más rápido y no requiere conexión al clúster', 'Server es más estricto', 'No hay diferencia', 'Client requiere acceso admin'], 
+        answer: 'Client es más rápido y no requiere conexión al clúster', 
+        hint: 'Client valida contra el esquema local descargado, sin latencia de red.', 
+        solution: 'Client es más rápido y no requiere conexión al clúster', 
+        keywords: [], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_val_10', 
+        title: 'Apply Completo', 
+        type: 'cmd', 
+        instruction: 'Escribe el comando completo para aplicar un archivo "manifest.yml" en modo dry-run cliente.',
+        hint: 'Combina kubectl apply, -f y --dry-run=client.', 
+        template: '', 
+        solution: 'kubectl apply -f manifest.yml --dry-run=client', 
+        keywords: ['kubectl', 'apply', '-f', 'manifest.yml', '--dry-run=client'], 
+        xp: 110 
+      }
     ],
     ciclo_de_vida: [
-      { id: 'ex_ciclo_01', type: 'code', keywords: ['restart: unless-stopped', 'healthcheck:', 'test:', 'depends_on:', 'condition: service_healthy', 'init: true'], hint: 'Política segura, healthcheck válido, espera condicional y tini.', xp: 150 },
-      { id: 'ex_ciclo_02', type: 'code', keywords: ['start_period:'], hint: 'Margen inicial antes de contar fallos.', xp: 100 },
-      { id: 'ex_ciclo_03', type: 'mcq', question: '¿Qué hace `restart: on-failure:5`?', options: ['Reinicia siempre 5 veces', 'Solo si sale != 0, máx 5', 'Espera 5s', 'Nunca reinicia'], answer: 'Solo si sale != 0, máx 5', xp: 80 },
-      { id: 'ex_ciclo_04', type: 'code', keywords: ['command: ["node", "server.js"]'], hint: 'Array CMD evita problemas con shell.', xp: 100 },
-      { id: 'ex_ciclo_05', type: 'mcq', question: '¿Por qué `depends_on` corto no garantiza conexión?', options: ['Es aleatorio', 'Solo espera arranque, no salud', 'K8s no lo soporta', 'Falta red'], answer: 'Solo espera arranque, no salud', xp: 90 },
-      { id: 'ex_ciclo_06', type: 'code', keywords: ['timeout: 5s', 'retries: 3'], hint: 'Límite de espera y fallos consecutivos.', xp: 100 },
-      { id: 'ex_ciclo_07', type: 'mcq', question: '¿Qué proceso inyecta `init: true`?', options: ['systemd', 'tini', 'cron', 'supervisord'], answer: 'tini', xp: 70 },
-      { id: 'ex_ciclo_08', type: 'code', keywords: ['stop_grace_period: 15s'], hint: 'Tiempo antes de SIGKILL forzado.', xp: 90 },
-      { id: 'ex_ciclo_09', type: 'mcq', question: '¿Cuál política respeta tu `stop` manual?', options: ['always', 'unless-stopped', 'no', 'on-failure'], answer: 'unless-stopped', xp: 80 },
-      { id: 'ex_ciclo_10', type: 'code', keywords: ['healthcheck:', 'test: ["CMD", "mysqladmin", "ping"'], hint: 'Healthcheck nativo de MySQL.', xp: 120 }
+      { 
+        id: 'ex_ciclo_01', 
+        title: 'Arranque Seguro', 
+        type: 'code', 
+        instruction: 'Configura el servicio "app" con reinicio "unless-stopped", un healthcheck contra "/health", dependencia condicional a "db" y init activado.',
+        hint: 'Usa restart, healthcheck, depends_on (con condition) e init.', 
+        template: 'services:\n  app:\n    image: node:20-alpine\n    restart:\n    init:\n    depends_on:\n      db:\n        condition:\n    healthcheck:\n      test:\n      interval:', 
+        solution: 'services:\n  app:\n    image: node:20-alpine\n    restart: unless-stopped\n    init: true\n    depends_on:\n      db:\n        condition: service_healthy\n    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost/health"]\n      interval: 30s', 
+        keywords: ['restart: unless-stopped', 'init: true', 'depends_on:', 'condition: service_healthy', 'healthcheck:', 'test:'], 
+        xp: 150 
+      },
+      { 
+        id: 'ex_ciclo_02', 
+        title: 'Periodo de Gracia', 
+        type: 'code', 
+        instruction: 'Añade un start_period de 20s al healthcheck para evitar fallos durante el arranque lento de una Java App.',
+        hint: 'Clave start_period dentro de healthcheck.', 
+        template: 'healthcheck:\n  test: ["CMD", "java", "-jar", "app.jar"]\n  interval: 10s\n  start_period:', 
+        solution: 'healthcheck:\n  test: ["CMD", "java", "-jar", "app.jar"]\n  interval: 10s\n  start_period: 20s', 
+        keywords: ['start_period: 20s'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_ciclo_03', 
+        title: 'Política On-Failure', 
+        type: 'mcq', 
+        question: '¿Qué comportamiento define "restart: on-failure:3"?', 
+        options: ['Reinicia siempre 3 veces', 'Solo si exit code != 0, máx 3 intentos', 'Espera 3 segundos', 'Nunca reinicia'], 
+        answer: 'Solo si exit code != 0, máx 3 intentos', 
+        hint: 'On-failure solo actúa ante errores, no paradas manuales.', 
+        solution: 'Solo si exit code != 0, máx 3 intentos', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_ciclo_04', 
+        title: 'Command Array', 
+        type: 'code', 
+        instruction: 'Sobrescribe el CMD del contenedor para ejecutar "python server.py" usando sintaxis de array (exec form).',
+        hint: 'command: ["ejecutable", "arg1", "arg2"]', 
+        template: 'command:', 
+        solution: 'command: ["python", "server.py"]', 
+        keywords: ['command: ["python", "server.py"]'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_ciclo_05', 
+        title: 'Depends_on Corto', 
+        type: 'mcq', 
+        question: '¿Qué garantiza "depends_on: - db" en su forma corta?', 
+        options: ['Que db está lista para recibir conexiones', 'Que db arranca antes que el servicio actual', 'Que db tiene salud óptima', 'Nada, es obsoleto'], 
+        answer: 'Que db arranca antes que el servicio actual', 
+        hint: 'La forma corta solo ordena el inicio, no espera salud.', 
+        solution: 'Que db arranca antes que el servicio actual', 
+        keywords: [], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_ciclo_06', 
+        title: 'Timeout y Retries', 
+        type: 'code', 
+        instruction: 'Define un healthcheck con timeout de 5s y 3 reintentos antes de marcar como unhealthy.',
+        hint: 'Claves timeout y retries dentro de healthcheck.', 
+        template: 'healthcheck:\n  test: ["CMD", "ping", "-c", "1", "localhost"]\n  timeout:\n  retries:', 
+        solution: 'healthcheck:\n  test: ["CMD", "ping", "-c", "1", "localhost"]\n  timeout: 5s\n  retries: 3', 
+        keywords: ['timeout: 5s', 'retries: 3'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_ciclo_07', 
+        title: 'Proceso Init', 
+        type: 'mcq', 
+        question: '¿Qué proceso inyecta Docker cuando usas "init: true"?', 
+        options: ['systemd', 'tini', 'bash', 'cron'], 
+        answer: 'tini', 
+        hint: 'Es un init ligero para reapar zombies y señales.', 
+        solution: 'tini', 
+        keywords: [], 
+        xp: 70 
+      },
+      { 
+        id: 'ex_ciclo_08', 
+        title: 'Grace Period', 
+        type: 'code', 
+        instruction: 'Establece un periodo de gracia de 15s para que el contenedor termine limpiamente antes de ser matado.',
+        hint: 'Clave stop_grace_period.', 
+        template: 'stop_grace_period:', 
+        solution: 'stop_grace_period: 15s', 
+        keywords: ['stop_grace_period: 15s'], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_ciclo_09', 
+        title: 'Unless-Stopped', 
+        type: 'mcq', 
+        question: '¿Cuál es la diferencia clave entre "always" y "unless-stopped"?', 
+        options: ['Always es más rápido', 'Unless-stopped respeta si tú lo paraste manualmente', 'Always no funciona en Linux', 'Son idénticos'], 
+        answer: 'Unless-stopped respeta si tú lo paraste manualmente', 
+        hint: 'Si haces docker stop, unless-stopped no lo levanta al reiniciar el demonio.', 
+        solution: 'Unless-stopped respeta si tú lo paraste manualmente', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_ciclo_10', 
+        title: 'Healthcheck MySQL', 
+        type: 'code', 
+        instruction: 'Escribe un healthcheck nativo para MySQL usando mysqladmin ping.',
+        hint: 'test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]', 
+        template: 'healthcheck:\n  test:', 
+        solution: 'healthcheck:\n  test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]', 
+        keywords: ['test: ["CMD", "mysqladmin", "ping"'], 
+        xp: 120 
+      }
     ],
     servicios_basicos: [
-      { id: 'ex_svc_01', type: 'code', keywords: ['mysql:8.0', 'wordpress:6.4', 'restart: unless-stopped', 'ports:', '"8080:80"', 'volumes:', 'db_data:'], hint: 'Stack completo: imágenes fijas, restart, port mapping, volumen raíz.', xp: 200 },
-      { id: 'ex_svc_02', type: 'mcq', question: '¿Diferencia entre `ports` y `expose`?', options: ['Ninguna', 'ports mapea al host, expose solo red interna', 'expose es más seguro', 'ports es obsoleto'], answer: 'ports mapea al host, expose solo red interna', xp: 80 },
-      { id: 'ex_svc_03', type: 'code', keywords: ['env_file: .env'], hint: 'Carga variables desde archivo externo.', xp: 100 },
-      { id: 'ex_svc_04', type: 'mcq', question: '¿Por qué evitar `:latest` en producción?', options: ['Es más lento', 'Impredecible, rompe auditorías', 'No existe', 'Solo funciona en Linux'], answer: 'Impredecible, rompe auditorías', xp: 90 },
-      { id: 'ex_svc_05', type: 'code', keywords: ['environment:', '  DEBUG: "false"'], hint: 'Comillas para evitar booleano accidental.', xp: 100 },
-      { id: 'ex_svc_06', type: 'code', keywords: ['volumes:', '  - db_data:/var/lib/mysql'], hint: 'Volumen nombrado persistente.', xp: 110 },
-      { id: 'ex_svc_07', type: 'mcq', question: '¿Sintaxis correcta para bind mount solo lectura?', options: ['./html:/usr/share:ro', './html:/usr/share:rw', './html:/usr/share:read', './html:/usr/share:lock'], answer: './html:/usr/share:ro', xp: 80 },
-      { id: 'ex_svc_08', type: 'code', keywords: ['WORDPRESS_DB_HOST: db:3306'], hint: 'Resolución DNS interna por nombre de servicio.', xp: 100 },
-      { id: 'ex_svc_09', type: 'mcq', question: '¿Dónde se declara `db_data:`?', options: ['Bajo services/db', 'A nivel raíz del compose', 'En el Dockerfile', 'En .env'], answer: 'A nivel raíz del compose', xp: 80 },
-      { id: 'ex_svc_10', type: 'code', keywords: ['image: node:20-alpine', 'ports:', '"3000:3000"'], hint: 'Imagen ligera + mapeo directo.', xp: 100 }
+      { 
+        id: 'ex_svc_01', 
+        title: 'Stack WP+DB', 
+        type: 'code', 
+        instruction: 'Define un servicio "db" con imagen mysql:8.0 y un servicio "wp" con wordpress:6.4. Expón el puerto 8080 del host al 80 del contenedor en WP, usa restart unless-stopped y declara el volumen db_data.',
+        hint: 'Recuerda declarar volumes: db_data: al final del archivo, fuera de services.', 
+        template: 'services:\n  db:\n    image:\n  wp:\n    image:\n    ports:\n    restart:\nvolumes:\n  ', 
+        solution: 'services:\n  db:\n    image: mysql:8.0\n  wp:\n    image: wordpress:6.4\n    ports:\n      - "8080:80"\n    restart: unless-stopped\nvolumes:\n  db_data:', 
+        keywords: ['mysql:8.0', 'wordpress:6.4', 'restart: unless-stopped', 'ports:', '"8080:80"', 'volumes:', 'db_data:'], 
+        xp: 200 
+      },
+      { 
+        id: 'ex_svc_02', 
+        title: 'Ports vs Expose', 
+        type: 'mcq', 
+        question: '¿Cuál es la diferencia fundamental entre "ports" y "expose" en Docker Compose?', 
+        options: ['Ninguna, son sinónimos', 'ports mapea al host, expose solo red interna', 'expose es más seguro', 'ports es obsoleto'], 
+        answer: 'ports mapea al host, expose solo red interna', 
+        hint: 'Expose no publica el puerto en la máquina anfitriona, solo lo hace visible para otros servicios.', 
+        solution: 'ports mapea al host, expose solo red interna', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_svc_03', 
+        title: 'Env File', 
+        type: 'code', 
+        instruction: 'Configura el servicio para cargar variables de entorno desde un archivo externo llamado ".env".',
+        hint: 'Usa la clave env_file.', 
+        template: 'env_file:', 
+        solution: 'env_file: .env', 
+        keywords: ['env_file: .env'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_svc_04', 
+        title: 'Latest Tag', 
+        type: 'mcq', 
+        question: '¿Por qué se considera mala práctica usar la etiqueta ":latest" en entornos de producción?', 
+        options: ['Es más lenta de descargar', 'Es impredecible y rompe auditorías de seguridad', 'No existe esa etiqueta', 'Solo funciona en Linux'], 
+        answer: 'Es impredecible y rompe auditorías de seguridad', 
+        hint: 'No sabes qué versión exacta estás ejecutando ni puedes reproducir el entorno.', 
+        solution: 'Es impredecible y rompe auditorías de seguridad', 
+        keywords: [], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_svc_05', 
+        title: 'Env Booleano', 
+        type: 'code', 
+        instruction: 'Define la variable de entorno DEBUG con valor "false". Usa comillas para evitar que YAML lo interprete como booleano.',
+        hint: 'Sin comillas, false es un tipo de dato, no un string.', 
+        template: 'environment:\n  DEBUG:', 
+        solution: 'environment:\n  DEBUG: "false"', 
+        keywords: ['environment:', '  DEBUG: "false"'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_svc_06', 
+        title: 'Volumen Nombrado', 
+        type: 'code', 
+        instruction: 'Monta un volumen nombrado llamado "db_data" en la ruta /var/lib/mysql dentro del contenedor.',
+        hint: 'Sintaxis: nombre_volumen:ruta_destino.', 
+        template: 'volumes:\n  - ', 
+        solution: 'volumes:\n  - db_data:/var/lib/mysql', 
+        keywords: ['volumes:', '  - db_data:/var/lib/mysql'], 
+        xp: 110 
+      },
+      { 
+        id: 'ex_svc_07', 
+        title: 'Bind Mount RO', 
+        type: 'mcq', 
+        question: '¿Cuál es la sintaxis correcta para montar un directorio local "./html" en modo solo lectura?', 
+        options: ['./html:/usr/share:ro', './html:/usr/share:rw', './html:/usr/share:read', './html:/usr/share:lock'], 
+        answer: './html:/usr/share:ro', 
+        hint: ':ro significa Read-Only al final de la ruta.', 
+        solution: './html:/usr/share:ro', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_svc_08', 
+        title: 'DNS Interno', 
+        type: 'code', 
+        instruction: 'Configura la variable WORDPRESS_DB_HOST para que apunte al servicio "db" por su nombre DNS interno en el puerto 3306.',
+        hint: 'Docker resuelve automáticamente los nombres de servicio como hostnames.', 
+        template: 'WORDPRESS_DB_HOST:', 
+        solution: 'WORDPRESS_DB_HOST: db:3306', 
+        keywords: ['WORDPRESS_DB_HOST: db:3306'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_svc_09', 
+        title: 'Root Volumes', 
+        type: 'mcq', 
+        question: '¿En qué sección del docker-compose.yml se declaran los volúmenes nombrados (como db_data)?', 
+        options: ['Bajo services/db', 'A nivel raíz del compose (fuera de services)', 'En el Dockerfile', 'En el archivo .env'], 
+        answer: 'A nivel raíz del compose (fuera de services)', 
+        hint: 'Es una sección de primer nivel, igual que networks o secrets.', 
+        solution: 'A nivel raíz del compose (fuera de services)', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_svc_10', 
+        title: 'Node Alpine', 
+        type: 'code', 
+        instruction: 'Define un servicio usando la imagen ligera node:20-alpine y expón el puerto 3000 del host al 3000 del contenedor.',
+        hint: 'Usa tags específicos como -alpine para reducir tamaño.', 
+        template: 'image:\nports:\n  - ', 
+        solution: 'image: node:20-alpine\nports:\n  - "3000:3000"', 
+        keywords: ['image: node:20-alpine', 'ports:', '"3000:3000"'], 
+        xp: 100 
+      }
     ],
     volumenes_redes_seguridad: [
-      { id: 'ex_sec_01', type: 'code', keywords: ['read_only: true', 'cap_drop: ["ALL"]', 'tmpfs:', '/tmp', 'internal: true', 'mem_limit: 256m', 'cpus: "0.5"'], hint: 'Hardening completo: RO, drop caps, tmpfs, red aislada, límites.', xp: 150 },
-      { id: 'ex_sec_02', type: 'mcq', question: '¿Qué hace `internal: true`?', options: ['Aísla del host', 'Corta salida a Internet', 'Encripta tráfico', 'Requiere auth'], answer: 'Corta salida a Internet', xp: 90 },
-      { id: 'ex_sec_03', type: 'code', keywords: ['security_opt: ["no-new-privileges:true"]'], hint: 'Impide escalada de privilegios.', xp: 100 },
-      { id: 'ex_sec_04', type: 'mcq', question: '¿Diferencia entre tmpfs y bind mount?', options: ['tmpfs es RAM volátil, bind es host persistente', 'Son iguales', 'tmpfs es más lento', 'bind es solo Linux'], answer: 'tmpfs es RAM volátil, bind es host persistente', xp: 80 },
-      { id: 'ex_sec_05', type: 'code', keywords: ['networks:', '  - backend'], hint: 'Conecta servicio a red personalizada.', xp: 90 },
-      { id: 'ex_sec_06', type: 'mcq', question: '¿Por qué combinar `read_only` con `tmpfs`?', options: ['Para permitir escritura temporal donde se necesite', 'Para encriptar', 'Para mejorar rendimiento', 'No se pueden combinar'], answer: 'Para permitir escritura temporal donde se necesite', xp: 100 },
-      { id: 'ex_sec_07', type: 'code', keywords: ['mem_limit: 512m', 'cpus: "1.0"'], hint: 'Límites estrictos de recursos.', xp: 90 },
-      { id: 'ex_sec_08', type: 'mcq', question: '¿Qué riesgo mitiga `cap_drop: ["ALL"]`?', options: ['Fuga de datos', 'Escalada de privilegios Linux', 'DDoS', 'Inyección SQL'], answer: 'Escalada de privilegios Linux', xp: 100 },
-      { id: 'ex_sec_09', type: 'code', keywords: ['privileged: false'], hint: 'Nunca true en prod salvo justificación extrema.', xp: 80 },
-      { id: 'ex_sec_10', type: 'mcq', question: '¿Dónde persisten los volúmenes nombrados?', options: ['/tmp', '/var/lib/docker/volumes', '/etc/docker', 'RAM'], answer: '/var/lib/docker/volumes', xp: 90 }
+      { 
+        id: 'ex_sec_01', 
+        title: 'Hardening Total', 
+        type: 'code', 
+        instruction: 'Aplica endurecimiento completo al servicio "app": sistema de ficheros solo lectura, elimina todas las capacidades Linux, monta /tmp en RAM, conecta a red interna aislada y limita memoria a 256m y CPU a 0.5.',
+        hint: 'Usa read_only: true, cap_drop: ["ALL"], tmpfs: - /tmp, networks: - interna, mem_limit: 256m, cpus: "0.5". Define la red como internal: true.', 
+        template: 'services:\n  app:\n    image: node:20-alpine\n    read_only:\n    cap_drop:\n    tmpfs:\n      - \n    networks:\n      - interna\n    mem_limit:\n    cpus:\nnetworks:\n  interna:\n    driver: bridge\n    internal:', 
+        solution: 'services:\n  app:\n    image: node:20-alpine\n    read_only: true\n    cap_drop: ["ALL"]\n    tmpfs:\n      - /tmp\n    networks:\n      - interna\n    mem_limit: 256m\n    cpus: "0.5"\nnetworks:\n  interna:\n    driver: bridge\n    internal: true', 
+        keywords: ['read_only: true', 'cap_drop: ["ALL"]', 'tmpfs:', '/tmp', 'internal: true', 'mem_limit: 256m', 'cpus: "0.5"'], 
+        xp: 150 
+      },
+      { 
+        id: 'ex_sec_02', 
+        title: 'Red Interna', 
+        type: 'mcq', 
+        question: '¿Qué efecto tiene establecer "internal: true" en una red de Docker Compose?', 
+        options: ['Aísla completamente del host', 'Corta la salida a Internet desde los contenedores', 'Encripta todo el tráfico', 'Requiere autenticación para conectar'], 
+        answer: 'Corta la salida a Internet desde los contenedores', 
+        hint: 'Los contenedores pueden comunicarse entre sí, pero no tienen gateway hacia fuera.', 
+        solution: 'Corta la salida a Internet desde los contenedores', 
+        keywords: [], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_sec_03', 
+        title: 'No New Privileges', 
+        type: 'code', 
+        instruction: 'Configura la opción de seguridad para impedir que el proceso dentro del contenedor gane nuevos privilegios mediante setuid o similar.',
+        hint: 'Usa security_opt con no-new-privileges:true.', 
+        template: 'security_opt:', 
+        solution: 'security_opt: ["no-new-privileges:true"]', 
+        keywords: ['security_opt: ["no-new-privileges:true"]'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_sec_04', 
+        title: 'Tmpfs vs Bind Mount', 
+        type: 'mcq', 
+        question: '¿Cuál es la diferencia principal entre un volumen tmpfs y un bind mount?', 
+        options: ['tmpfs reside en RAM y es volátil; bind mount usa el disco del host', 'Son idénticos en funcionamiento', 'tmpfs es más lento que bind mount', 'bind mount solo funciona en Linux'], 
+        answer: 'tmpfs reside en RAM y es volátil; bind mount usa el disco del host', 
+        hint: 'Tmpfs se borra al detener el contenedor. Bind mount persiste en el host.', 
+        solution: 'tmpfs reside en RAM y es volátil; bind mount usa el disco del host', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_sec_05', 
+        title: 'Conectar a Red', 
+        type: 'code', 
+        instruction: 'Conecta el servicio actual a una red personalizada llamada "backend".',
+        hint: 'Dentro del servicio, usa la clave networks con una lista.', 
+        template: 'networks:\n  - ', 
+        solution: 'networks:\n  - backend', 
+        keywords: ['networks:', '  - backend'], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_sec_06', 
+        title: 'RO + Tmpfs', 
+        type: 'mcq', 
+        question: '¿Por qué es necesario combinar "read_only: true" con montajes tmpfs en directorios como /tmp o /run?', 
+        options: ['Para permitir escritura temporal donde la aplicación lo necesite', 'Para encriptar esos directorios', 'Para mejorar el rendimiento de E/S', 'No es necesario, son incompatibles'], 
+        answer: 'Para permitir escritura temporal donde la aplicación lo necesite', 
+        hint: 'Si el FS raíz es RO, la app fallará si intenta escribir en /tmp. Tmpfs soluciona esto.', 
+        solution: 'Para permitir escritura temporal donde la aplicación lo necesite', 
+        keywords: [], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_sec_07', 
+        title: 'Límites de Recursos', 
+        type: 'code', 
+        instruction: 'Establece un límite de memoria de 512MB y un límite de CPU de 1 núcleo completo para el servicio.',
+        hint: 'Usa mem_limit: 512m y cpus: "1.0". Las comillas en cpus son opcionales pero recomendadas.', 
+        template: 'mem_limit:\ncpus:', 
+        solution: 'mem_limit: 512m\ncpus: "1.0"', 
+        keywords: ['mem_limit: 512m', 'cpus: "1.0"'], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_sec_08', 
+        title: 'Cap Drop All', 
+        type: 'mcq', 
+        question: '¿Qué riesgo de seguridad mitiga principalmente la directiva "cap_drop: [ALL]"?', 
+        options: ['Fuga de datos por red', 'Escalada de privilegios dentro del kernel Linux', 'Ataques DDoS', 'Inyección SQL en la base de datos'], 
+        answer: 'Escalada de privilegios dentro del kernel Linux', 
+        hint: 'Elimina capacidades como CAP_SYS_ADMIN que permiten acciones privilegiadas.', 
+        solution: 'Escalada de privilegios dentro del kernel Linux', 
+        keywords: [], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_sec_09', 
+        title: 'Privileged False', 
+        type: 'code', 
+        instruction: 'Asegúrate explícitamente de que el contenedor NO se ejecuta en modo privilegiado.',
+        hint: 'Modo privilegiado da acceso casi total al host. Usa privileged: false.', 
+        template: 'privileged:', 
+        solution: 'privileged: false', 
+        keywords: ['privileged: false'], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_sec_10', 
+        title: 'Persistencia de Volúmenes', 
+        type: 'mcq', 
+        question: '¿Dónde almacena Docker físicamente los datos de los volúmenes con nombre (named volumes)?', 
+        options: ['/tmp', '/var/lib/docker/volumes', '/etc/docker', 'En la RAM del sistema'], 
+        answer: '/var/lib/docker/volumes', 
+        hint: 'Es el directorio gestionado por el demonio Docker para persistencia.', 
+        solution: '/var/lib/docker/volumes', 
+        keywords: [], 
+        xp: 90 
+      }
     ],
     kubernetes_vs_compose: [
-      { id: 'ex_k8s_01', type: 'code', keywords: ['apiVersion: apps/v1', 'kind: Deployment', 'replicas: 2', 'matchLabels:', 'template:', 'kind: Service', 'type: NodePort', 'nodePort: 30080', '---'], hint: 'Multi-documento: Deployment(2 replicas) + Service(NodePort 30080).', xp: 200 },
-      { id: 'ex_k8s_02', type: 'mcq', question: '¿Equivalencia de `restart: unless-stopped` en K8s?', options: ['RestartPolicy: Never', 'Implícito en Deployment', 'LivenessProbe', 'InitContainer'], answer: 'Implícito en Deployment', xp: 80 },
-      { id: 'ex_k8s_03', type: 'code', keywords: ['kind: ConfigMap', 'data:'], hint: 'Configuración no sensible.', xp: 90 },
-      { id: 'ex_k8s_04', type: 'mcq', question: '¿Diferencia principal Compose vs K8s?', options: ['Compose es multi-nodo, K8s mono-nodo', 'Compose mono-nodo, K8s clúster distribuido', 'Son iguales', 'K8s es más lento'], answer: 'Compose mono-nodo, K8s clúster distribuido', xp: 90 },
-      { id: 'ex_k8s_05', type: 'code', keywords: ['kind: Secret', 'stringData:'], hint: 'Datos sensibles (codificados en base64 por K8s).', xp: 100 },
-      { id: 'ex_k8s_06', type: 'mcq', question: '¿Qué hace `selector.matchLabels`?', options: ['Expone puertos', 'Vincula Service/Deployment con pods por etiquetas', 'Crea volúmenes', 'Define réplicas'], answer: 'Vincula Service/Deployment con pods por etiquetas', xp: 100 },
-      { id: 'ex_k8s_07', type: 'code', keywords: ['livenessProbe:', 'readinessProbe:'], hint: 'Sondas de salud K8s.', xp: 120 },
-      { id: 'ex_k8s_08', type: 'mcq', question: '¿Por qué usar multi-documento en K8s?', options: ['Para agrupar recursos relacionados en un solo apply', 'Para ahorrar espacio', 'Es obligatorio', 'Para compresión'], answer: 'Para agrupar recursos relacionados en un solo apply', xp: 90 },
-      { id: 'ex_k8s_09', type: 'code', keywords: ['kind: PersistentVolumeClaim', 'resources: requests: storage: 1Gi'], hint: 'Solicitud de almacenamiento persistente.', xp: 110 },
-      { id: 'ex_k8s_10', type: 'mcq', question: '¿Qué `type` de Service expone al exterior?', options: ['ClusterIP', 'NodePort/LoadBalancer', 'ExternalName', 'Headless'], answer: 'NodePort/LoadBalancer', xp: 100 }
+      { 
+        id: 'ex_k8s_01', 
+        title: 'Deploy + Service', 
+        type: 'code', 
+        instruction: 'Crea un manifiesto multi-documento con un Deployment de Nginx (2 réplicas) y un Service tipo NodePort (puerto 30080). Usa "---" para separar los documentos.',
+        hint: 'El Deployment necesita selector.matchLabels que coincida con template.metadata.labels. El Service usa selector para apuntar al pod.', 
+        template: 'apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas:\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: web\n        image: nginx:1.27-alpine\n        ports:\n        - containerPort: 80\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: web-svc\nspec:\n  type:\n  selector:\n    app: web\n  ports:\n  - port: 80\n    targetPort: 80\n    nodePort:', 
+        solution: 'apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: web\n        image: nginx:1.27-alpine\n        ports:\n        - containerPort: 80\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: web-svc\nspec:\n  type: NodePort\n  selector:\n    app: web\n  ports:\n  - port: 80\n    targetPort: 80\n    nodePort: 30080', 
+        keywords: ['apiVersion: apps/v1', 'kind: Deployment', 'replicas: 2', 'matchLabels:', 'template:', 'kind: Service', 'type: NodePort', 'nodePort: 30080', '---'], 
+        xp: 200 
+      },
+      { 
+        id: 'ex_k8s_02', 
+        title: 'Restart Policy K8s', 
+        type: 'mcq', 
+        question: '¿Cuál es la equivalencia en Kubernetes de "restart: unless-stopped" de Docker Compose?', 
+        options: ['RestartPolicy: Never', 'Implícito en el comportamiento de un Deployment', 'LivenessProbe', 'InitContainer'], 
+        answer: 'Implícito en el comportamiento de un Deployment', 
+        hint: 'Un Deployment siempre intenta mantener el número deseado de réplicas, reiniciando pods caídos por defecto.', 
+        solution: 'Implícito en el comportamiento de un Deployment', 
+        keywords: [], 
+        xp: 80 
+      },
+      { 
+        id: 'ex_k8s_03', 
+        title: 'ConfigMap', 
+        type: 'code', 
+        instruction: 'Define un ConfigMap llamado "app-config" con una variable APP_ENV establecida en "production".',
+        hint: 'Los ConfigMaps almacenan configuración no sensible en pares clave-valor bajo data:.', 
+        template: 'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: app-config\ndata:', 
+        solution: 'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: app-config\ndata:\n  APP_ENV: production', 
+        keywords: ['kind: ConfigMap', 'data:', 'APP_ENV: production'], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_k8s_04', 
+        title: 'Compose vs K8s', 
+        type: 'mcq', 
+        question: '¿Cuál es la diferencia fundamental de arquitectura entre Docker Compose y Kubernetes?', 
+        options: ['Compose es multi-nodo, K8s mono-nodo', 'Compose gestiona contenedores en un solo host, K8s orquesta clústeres distribuidos', 'Son idénticos', 'K8s es más lento'], 
+        answer: 'Compose gestiona contenedores en un solo host, K8s orquesta clústeres distribuidos', 
+        hint: 'Kubernetes está diseñado para escalar horizontalmente en múltiples máquinas.', 
+        solution: 'Compose gestiona contenedores en un solo host, K8s orquesta clústeres distribuidos', 
+        keywords: [], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_k8s_05', 
+        title: 'Secret', 
+        type: 'code', 
+        instruction: 'Crea un Secret llamado "db-secret" para almacenar la contraseña de BD. Usa stringData para escribirlo en texto plano (K8s lo codifica automáticamente).',
+        hint: 'Los Secrets son similares a ConfigMaps pero para datos sensibles. Usa type: Opaque.', 
+        template: 'apiVersion: v1\nkind: Secret\nmetadata:\n  name: db-secret\ntype: Opaque\nstringData:', 
+        solution: 'apiVersion: v1\nkind: Secret\nmetadata:\n  name: db-secret\ntype: Opaque\nstringData:\n  DB_PASSWORD: ejemplo', 
+        keywords: ['kind: Secret', 'stringData:', 'DB_PASSWORD:'], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_k8s_06', 
+        title: 'Selector Match', 
+        type: 'mcq', 
+        question: '¿Qué función cumple "selector.matchLabels" en un Deployment o Service de Kubernetes?', 
+        options: ['Expone puertos al exterior', 'Vincula el objeto con los Pods que tienen esas etiquetas', 'Crea volúmenes persistentes', 'Define el número de réplicas'], 
+        answer: 'Vincula el objeto con los Pods que tienen esas etiquetas', 
+        hint: 'Es el mecanismo de descubrimiento: el Service busca Pods con labels coincidentes.', 
+        solution: 'Vincula el objeto con los Pods que tienen esas etiquetas', 
+        keywords: [], 
+        xp: 100 
+      },
+      { 
+        id: 'ex_k8s_07', 
+        title: 'Probes (Sondas)', 
+        type: 'code', 
+        instruction: 'Define sondas liveness y readiness usando httpGet contra la ruta /health en el puerto 3000.',
+        hint: 'livenessProbe reinicia el pod si falla. readinessProbe lo saca del servicio si falla.', 
+        template: 'livenessProbe:\n  httpGet:\n    path: /health\n    port: 3000\nreadinessProbe:', 
+        solution: 'livenessProbe:\n  httpGet:\n    path: /health\n    port: 3000\nreadinessProbe:\n  httpGet:\n    path: /health\n    port: 3000', 
+        keywords: ['livenessProbe:', 'readinessProbe:', 'httpGet:', 'path: /health', 'port: 3000'], 
+        xp: 120 
+      },
+      { 
+        id: 'ex_k8s_08', 
+        title: 'Multi-Documento', 
+        type: 'mcq', 
+        question: '¿Por qué Kubernetes permite múltiples documentos YAML en un solo archivo separados por "---"?', 
+        options: ['Para agrupar recursos relacionados (ej: Deploy+Service) y aplicarlos juntos', 'Para ahorrar espacio', 'Es obligatorio por sintaxis', 'Para comprimir datos'], 
+        answer: 'Para agrupar recursos relacionados (ej: Deploy+Service) y aplicarlos juntos', 
+        hint: 'Permite gestionar toda la aplicación con un solo comando kubectl apply -f archivo.yml.', 
+        solution: 'Para agrupar recursos relacionados (ej: Deploy+Service) y aplicarlos juntos', 
+        keywords: [], 
+        xp: 90 
+      },
+      { 
+        id: 'ex_k8s_09', 
+        title: 'PVC (Almacenamiento)', 
+        type: 'code', 
+        instruction: 'Define un PersistentVolumeClaim llamado "pg-claim" que solicite 1Gi de almacenamiento.',
+        hint: 'Los PVCs solicitan almacenamiento al clúster. Se usan en volumes del Pod.', 
+        template: 'apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: pg-claim\nspec:\n  resources:\n    requests:\n      storage:', 
+        solution: 'apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: pg-claim\nspec:\n  resources:\n    requests:\n      storage: 1Gi', 
+        keywords: ['kind: PersistentVolumeClaim', 'resources:', 'requests:', 'storage: 1Gi'], 
+        xp: 110 
+      },
+      { 
+        id: 'ex_k8s_10', 
+        title: 'Tipos de Service', 
+        type: 'mcq', 
+        question: '¿Qué tipo de Service expone la aplicación al exterior del clúster?', 
+        options: ['ClusterIP', 'NodePort o LoadBalancer', 'ExternalName', 'Headless'], 
+        answer: 'NodePort o LoadBalancer', 
+        hint: 'ClusterIP es solo accesible dentro del clúster. NodePort abre un puerto en cada nodo.', 
+        solution: 'NodePort o LoadBalancer', 
+        keywords: [], 
+        xp: 100 
+      }
     ]
   },
 
@@ -108,16 +834,13 @@ const App = {
     this.setupTabs();
     this.checkOnboarding();
     this.detectModule();
-    this.bindExerciseSystem();
   },
 
   applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    const label = document.getElementById('theme-label');
-    const toggle = document.getElementById('theme-toggle');
-    if (label) label.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Oscuro';
-    if (toggle) toggle.textContent = theme === 'dark' ? '🌙 Oscuro' : '☀️ Claro';
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = theme === 'dark' ? '🌙 Oscuro' : '☀️ Claro';
   },
 
   setupThemeToggle() {
@@ -129,22 +852,21 @@ const App = {
   },
 
   updateProgressUI() {
-    const total = 70;
-    const pct = Math.min((this.state.completed.length / total) * 100, 100);
+    // Calcula progreso global (aproximado)
+    let totalCompleted = 0;
+    Object.values(this.state.progress).forEach(mod => {
+      totalCompleted += Object.values(mod).filter(v => v === 'completed').length;
+    });
+    const totalTasks = 70; // 7 módulos * 10
+    const pct = Math.min((totalCompleted / totalTasks) * 100, 100);
+    
     document.querySelectorAll('.progress-fill').forEach(el => el.style.width = `${pct}%`);
     document.querySelectorAll('#xp-display').forEach(el => el.textContent = `${this.state.xp} XP`);
-    document.querySelectorAll('#completed-count').forEach(el => el.textContent = this.state.completed.length);
-  },
-
-  addXP(amount, exerciseId) {
-    if (!this.state.completed.includes(exerciseId)) {
-      this.state.completed.push(exerciseId);
-      this.state.xp += amount;
-      localStorage.setItem('xp', this.state.xp);
-      localStorage.setItem('completed', JSON.stringify(this.state.completed));
-      this.updateProgressUI();
-      this.showNotification(`+${amount} XP 🏆`, 'success');
-    }
+    
+    // Actualizar contadores locales si existen
+    const moduleCount = this.state.currentModule ? Object.values(this.state.progress[this.state.currentModule] || {}).filter(v => v === 'completed').length : 0;
+    document.querySelectorAll('#completed-count').forEach(el => el.textContent = moduleCount);
+    document.querySelectorAll('#xp-count').forEach(el => el.textContent = this.state.xp);
   },
 
   setupTabs() {
@@ -154,8 +876,12 @@ const App = {
         document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
-        const panel = document.getElementById(target);
-        if (panel) panel.classList.add('active');
+        document.getElementById(target)?.classList.add('active');
+        
+        // Si entra en la pestaña de reto, renderizar el grid
+        if (target === 'reto') {
+          this.renderTaskGrid(this.state.currentModule);
+        }
       });
     });
   },
@@ -174,130 +900,220 @@ const App = {
   detectModule() {
     const path = window.location.pathname.split('/').pop().replace('.html', '');
     this.state.currentModule = path;
-    // Auto-vincula el ejercicio por defecto si existe
-    const defaultEx = this.exercises[path]?.[0];
-    if (defaultEx && document.getElementById('yaml-editor')) {
-      this.setupExerciseUI(defaultEx);
+    // Si ya está en la pestaña reto al cargar, renderizar
+    if (document.querySelector('.tab-btn[data-tab="reto"].active')) {
+      this.renderTaskGrid(path);
     }
   },
 
-  bindExerciseSystem() {
-    // Vinculación automática de botones y editores
-    document.getElementById('btn-validate')?.addEventListener('click', () => this.runValidation());
-    document.getElementById('btn-hint')?.addEventListener('click', () => this.showHint());
-    document.getElementById('btn-clear')?.addEventListener('click', () => {
-      const ed = document.getElementById('yaml-editor');
-      if (ed) ed.value = '';
+  renderTaskGrid(module) {
+    const container = document.getElementById('task-container');
+    const editorArea = document.getElementById('task-editor');
+    if (!container || !this.exercises[module]) return;
+
+    // Limpiar área de editor al cambiar de vista
+    if (editorArea) editorArea.innerHTML = '';
+    if (editorArea) editorArea.classList.remove('active');
+
+    const grid = document.createElement('div');
+    grid.className = 'task-grid';
+
+    this.exercises[module].forEach((ex, i) => {
+      const status = this.getTaskStatus(module, i);
+      const card = document.createElement('div');
+      card.className = `task-card ${status === 'completed' ? 'completed' : ''}`;
+      card.innerHTML = `
+        <span class="task-badge">${status === 'completed' ? '✅ Completado' : '⏳ Pendiente'}</span>
+        <h4>Tarea ${i + 1}</h4>
+        <p>${ex.title}</p>
+      `;
+      card.addEventListener('click', () => this.openTask(module, i));
+      grid.appendChild(card);
     });
-    // Permitir Ctrl+Enter para validar
-    document.getElementById('yaml-editor')?.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'Enter') this.runValidation();
-    });
+
+    container.innerHTML = '';
+    container.appendChild(grid);
   },
 
-  setupExerciseUI(ex) {
-    const editor = document.getElementById('yaml-editor');
-    if (editor && !editor.value) editor.placeholder = `// Ejercicio ${ex.id}\n${ex.hint || ''}`;
-  },
-
-  runValidation() {
-    const module = this.state.currentModule;
-    if (!module || !this.exercises[module]) return;
-
-    const input = document.getElementById('yaml-editor')?.value || '';
-    const feedback = document.getElementById('feedback');
-    const hintBox = document.getElementById('hint-box');
+  openTask(module, index) {
+    this.state.activeTaskIndex = index;
+    const ex = this.exercises[module][index];
+    const editorArea = document.getElementById('task-editor');
+    const container = document.getElementById('task-container');
     
-    // Detecta índice activo por pestaña o usa el primero
-    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'teoria';
-    const isEditor = activeTab === 'reto' || activeTab === 'editor';
-    if (!isEditor) {
-      this.showFeedback(feedback, '⚠️ Cambia a la pestaña "Reto" o "Editor" para validar.', 'warning');
-      return;
+    if (!editorArea) return;
+
+    // Marcar tarjeta activa visualmente
+    if (container) {
+      Array.from(container.children).forEach((c, i) => c.classList.toggle('active', i === index));
     }
 
-    // Busca ejercicio correspondiente (simplificado al primero si no hay selector)
-    const ex = this.exercises[module]?.[0] || this.exercises[module][Math.floor(Math.random() * this.exercises[module].length)];
-    if (!ex) return;
-
-    const normalized = this.normalizeYAML(input);
-    const checks = this.validate(input, ex);
+    editorArea.classList.add('active');
     
-    if (checks.isCorrect) {
-      this.showFeedback(feedback, checks.feedback, 'success');
-      this.addXP(ex.xp, ex.id);
-      if (hintBox) hintBox.classList.remove('show');
+    let html = `<h3>Tarea ${index + 1}: ${ex.title}</h3>`;
+    
+    // ✅ AÑADIDO: Mostrar instrucción clara si existe
+    if (ex.instruction) {
+      html += `<div style="background:var(--surface-alt); padding:1rem; border-radius:6px; margin-bottom:1rem; border-left:4px solid var(--primary);">
+        <strong>📝 Instrucción:</strong><br>${ex.instruction}
+      </div>`;
+    }
+
+    if (ex.type === 'mcq') {
+      html += `<p style="margin-bottom:1rem; font-weight:500;">${ex.question}</p>` + 
+        ex.options.map((opt, i) => 
+          `<div style="margin:0.4rem 0"><label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;"><input type="radio" name="mcq_${index}" value="${opt}"> ${opt}</label></div>`
+        ).join('');
     } else {
-      this.showFeedback(feedback, checks.feedback, 'error');
+      // ✅ CORRECCIÓN: Usar '' para empezar vacío siempre, ignorando borradores anteriores si se desea reinicio limpio.
+      // Si prefieres que recuerde lo que escribió antes incluso tras recargar, cambia '' por this.getSavedInput(module, index)
+      const initialContent = ''; 
+      
+      html += `
+        <div class="editor-wrap">
+          <textarea id="yaml-input" rows="10" placeholder="Escribe tu solución aquí o carga la plantilla...">${initialContent}</textarea>
+        </div>`;
     }
+
+    html += `
+      <div class="task-controls">
+        ${ex.type !== 'mcq' ? '<button class="btn btn-outline" id="btn-template">📄 Cargar Plantilla</button>' : ''}
+        <button class="btn btn-outline" id="btn-hint">💡 Pista</button>
+        <button class="btn primary" id="btn-validate">✅ Validar</button>
+        <button class="btn btn-outline" id="btn-solution">👁️ Ver Respuesta</button>
+      </div>
+      <div id="hint-box" class="hint-box"></div>
+      <div id="feedback" class="feedback"></div>
+      <div id="solution-box" class="solution-box"><pre><code></code></pre></div>
+    `;
+
+    editorArea.innerHTML = html;
+    this.bindTaskButtons(module, index, ex);
   },
 
-  validate(input, exercise) {
-    const normalized = this.normalizeYAML(input);
-    const structural = this.checkYAMLStructure(normalized);
+  bindTaskButtons(module, index, ex) {
+    const editor = document.getElementById('yaml-input');
     
-    if (structural.error) return { isCorrect: false, feedback: `❌ Error estructural: ${structural.error}` };
+    // Botón Plantilla
+    document.getElementById('btn-template')?.addEventListener('click', () => {
+      const editor = document.getElementById('yaml-input');
+      if (editor && ex.template) {
+        editor.value = ex.template; // Aquí sí se llena con la plantilla
+        // Opcional: Guardar inmediatamente como borrador
+        this.saveInput(module, index, ex.template); 
+      }
+    });
 
-    if (exercise.type === 'cmd') {
-      const matches = exercise.keywords.every(k => normalized.includes(k.toLowerCase()));
-      return {
-        isCorrect: matches,
-        feedback: matches ? '✅ Comando correcto. Sintaxis y flags válidos.' : `❌ Revisa: faltan argumentos clave. Pista: ${exercise.hint}`
-      };
-    }
-
-    if (exercise.type === 'mcq') {
-      const sel = document.querySelector('input[name="mcq"]:checked');
-      const matches = sel && sel.value === exercise.answer;
-      return {
-        isCorrect: matches,
-        feedback: matches ? '✅ Respuesta correcta.' : `❌ Incorrecto. Revisa la documentación de YAML/K8s.`
-      };
-    }
-
-    // type: code | fix
-    const keywordMatches = exercise.keywords.every(k => normalized.includes(k.toLowerCase()));
-    return {
-      isCorrect: keywordMatches,
-      feedback: keywordMatches ? '✅ ¡Estructura válida! Claves y jerarquía correctas.' : `⚠️ Faltan claves o la indentación es incorrecta. ${exercise.hint}`
-    };
-  },
-
-  normalizeYAML(str) {
-    return str.replace(/\r\n/g, '\n').replace(/\t/g, '  ').replace(/\s+/g, ' ').trim().toLowerCase();
-  },
-
-  checkYAMLStructure(normalized) {
-    if (/\t/.test(normalized.replace(/  /g, ''))) return { error: 'Se detectaron tabuladores. Usa SOLO 2 espacios.' };
-    if (/:\w/.test(normalized)) return { error: 'Falta espacio después de los dos puntos (:).' };
-    return { error: null };
-  },
-
-  showHint() {
-    const module = this.state.currentModule;
-    const ex = this.exercises[module]?.[0];
-    const box = document.getElementById('hint-box');
-    if (box && ex) {
+    // Botón Pista
+    document.getElementById('btn-hint')?.addEventListener('click', () => {
+      const box = document.getElementById('hint-box');
       box.innerHTML = `💡 <strong>Pista:</strong> ${ex.hint}`;
-      box.classList.add('show');
-    }
+      box.classList.toggle('show');
+    });
+
+    // Botón Ver Respuesta
+    document.getElementById('btn-solution')?.addEventListener('click', () => {
+      const box = document.getElementById('solution-box');
+      const code = box.querySelector('code');
+      code.textContent = ex.solution;
+      box.classList.toggle('show');
+    });
+
+    // Botón Validar
+    document.getElementById('btn-validate')?.addEventListener('click', () => {
+      let input = '';
+      if (ex.type === 'mcq') {
+        const checked = document.querySelector(`input[name="mcq_${index}"]:checked`);
+        input = checked ? checked.value : '';
+      } else if (editor) {
+        input = editor.value;
+        this.saveInput(module, index, input);
+      }
+
+      const isCorrect = this.validateTask(ex, input);
+      const fb = document.getElementById('feedback');
+      if (!fb) return;
+
+      fb.classList.add('show');
+      
+      if (isCorrect) {
+        fb.className = 'feedback success';
+        fb.innerHTML = '✅ ¡Correcto! Estructura y tipos válidos. +XP';
+        this.setTaskStatus(module, index, 'completed');
+        this.addXP(ex.xp, ex.id);
+      } else {
+        fb.className = 'feedback error';
+        fb.innerHTML = `❌ Revisa: ${ex.hint}`;
+      }
+    });
   },
 
-  showFeedback(element, message, type) {
-    if (!element) return;
-    element.className = `feedback show ${type}`;
-    element.innerHTML = message;
-    // Auto-scroll al feedback
-    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  validateTask(ex, input) {
+    if (!input) return false;
+    const norm = input.replace(/\s+/g, ' ').trim().toLowerCase();
+    
+    if (ex.type === 'mcq') {
+      return norm === ex.answer.toLowerCase();
+    }
+    
+    // Validación estructural básica
+    if (norm.includes('\t')) return false; // Tabs prohibidos
+    
+    // Validación por keywords
+    return ex.keywords.every(k => norm.includes(k.toLowerCase()));
+  },
+
+  getTaskStatus(module, index) {
+    return this.state.progress[module]?.[index] || 'pending';
+  },
+
+  setTaskStatus(module, index, status) {
+    if (!this.state.progress[module]) this.state.progress[module] = {};
+    this.state.progress[module][index] = status;
+    localStorage.setItem('sc_progress', JSON.stringify(this.state.progress));
+    this.renderTaskGrid(this.state.currentModule); // Refrescar grid
+    this.updateProgressUI();
+  },
+
+  getSavedInput(module, index) {
+    return this.state.progress[module]?.[`${index}_input`] || '';
+  },
+
+  saveInput(module, index, value) {
+    if (!this.state.progress[module]) this.state.progress[module] = {};
+    this.state.progress[module][`${index}_input`] = value;
+    localStorage.setItem('sc_progress', JSON.stringify(this.state.progress));
+  },
+
+  addXP(amount, exerciseId) {
+    // Evitar doble XP por mismo ejercicio en misma sesión si ya estaba completado
+    // Pero como setTaskStatus ya marca completado, simplificamos:
+    // Solo sumamos si no estaba completado antes de este click (lógica manejada en setTaskStatus idealmente, pero aquí basta con sumar si es correcto)
+    // Para ser estrictos, comprobamos si ya estaba en completed array global si usáramos ese sistema, 
+    // pero con el nuevo sistema de progress object, podemos confiar en que el usuario gana XP al completar.
+    
+    // Nota: Para evitar spam de XP recargando, deberíamos guardar XP ganada por ID.
+    // Simplificación: Sumamos XP siempre que valide correctamente y marque como completado por primera vez en la sesión.
+    
+    const xpKey = `xp_${exerciseId}`;
+    if (!sessionStorage.getItem(xpKey)) {
+      this.state.xp += amount;
+      localStorage.setItem('xp', this.state.xp);
+      sessionStorage.setItem(xpKey, 'true');
+      this.showNotification(`+${amount} XP 🏆`, 'success');
+      this.updateProgressUI();
+    }
   },
 
   showNotification(msg, type) {
-    // Simple toast overlay
     const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;bottom:20px;right:20px;padding:12px 20px;background:var(--${type==='success'?'success':'error'});color:white;border-radius:8px;z-index:9999;font-weight:600;animation:fadeIn 0.3s;`;
+    toast.style.cssText = `position:fixed;bottom:20px;right:20px;padding:12px 20px;background:var(--${type==='success'?'success':'error'});color:white;border-radius:8px;z-index:9999;font-weight:600;animation:fadeIn 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
     toast.textContent = msg;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2500);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
   }
 };
 

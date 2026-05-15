@@ -32,11 +32,8 @@ const App = {
         type: 'code', 
         instruction: 'Crea una configuración de servidor con host "192.168.1.10" y puerto 8080. Usa indentación de 2 espacios.',
         hint: 'La clave "host" y "puerto" deben estar sangradas respecto a "servicio".', 
-        // Template corregido: usa 'servicio' como padre genérico
         template: 'service:\n  host:\n  port:', 
-        // Solución corregida: indentación perfecta y clave singular 'puerto'
         solution: 'service:\n  host: 192.168.1.10\n  port: 8080', 
-        // Keywords corregidas: deben coincidir EXACTAMENTE con la solución
         keywords: ['service:', '  host:', '  port:'], 
         xp: 100 
       },
@@ -140,24 +137,24 @@ const App = {
         level: 1,
         instruction: 'Identifica el error de sintaxis en este YAML:',
         broken_yaml: `services:
-      web:
-        image: nginx
-        ports:
-        - 8080:80`,
+  web:
+    image: nginx
+    ports:
+    - 8080:80`,
         question: '¿Cuál es el error principal?',
         options: [
           'Falta comillas en el puerto',
-          'La lista de puertos no está correctamente indentada', // ✅
+          'La lista de puertos no está correctamente indentada',
           'La clave "ports" no lleva dos puntos',
           'El servicio "web" no tiene imagen'
         ],
         answer: 'La lista de puertos no está correctamente indentada',
         hint: 'Los elementos de lista ("-") deben estar sangrados 2 espacios más que su clave padre.',
         solution: `services:
-      web:
-        image: nginx
-        ports:
-          - "8080:80"`,
+  web:
+    image: nginx
+    ports:
+      - "8080:80"`,
         xp: 80 
       },
       { 
@@ -167,28 +164,28 @@ const App = {
         level: 1,
         instruction: 'Este YAML tiene valores que YAML interpretará como booleanos sin querer:',
         broken_yaml: `services:
-      app:
-        image: node:20
-        restart: True
-        environment:
-          DEBUG: yes
-          PROD: off`,
+  app:
+    image: node:20
+    restart: True
+    environment:
+      DEBUG: yes
+      PROD: off`,
         question: '¿Qué problema tienen los valores "True", "yes" y "off"?',
         options: [
           'Son palabras reservadas de Docker y no se pueden usar',
-          'YAML los parsea como booleanos, no como strings literales', // ✅
+          'YAML los parsea como booleanos, no como strings literales',
           'Deben ir siempre en mayúsculas para funcionar',
           'No hay problema, YAML los acepta tal cual'
         ],
         answer: 'YAML los parsea como booleanos, no como strings literales',
         hint: 'Si quieres que "yes" sea texto, usa comillas: "yes". Los booleanos reales van en minúscula: true/false.',
         solution: `services:
-      app:
-        image: node:20
-        restart: true
-        environment:
-          DEBUG: "yes"
-          PROD: "off"`,
+  app:
+    image: node:20
+    restart: true
+    environment:
+      DEBUG: "yes"
+      PROD: "off"`,
         xp: 90 
       },
       { 
@@ -198,26 +195,26 @@ const App = {
         level: 2,
         instruction: 'La sintaxis de volúmenes tiene un error sutil pero crítico:',
         broken_yaml: `services:
-      web:
-        image: nginx
-        volumes:
-         -./html:/usr/share/nginx/html
-         -db_data:/var/lib/mysql`,
+  web:
+    image: nginx
+    volumes:
+     -./html:/usr/share/nginx/html
+     -db_data:/var/lib/mysql`,
         question: '¿Qué error de sintaxis impide que este YAML funcione?',
         options: [
           'Las rutas relativas no pueden empezar por "./"',
-          'Falta un espacio después del guion "-" en cada elemento de la lista', // ✅
+          'Falta un espacio después del guion "-" en cada elemento de la lista',
           'Los volúmenes con nombre no pueden usarse en bind mounts',
           'La ruta de destino debe ir antes que la del host'
         ],
         answer: 'Falta un espacio después del guion "-" en cada elemento de la lista',
         hint: 'Correcto: "- ./ruta:destino". Incorrecto: "-./ruta:destino". El espacio tras el guion es obligatorio.',
         solution: `services:
-      web:
-        image: nginx
-        volumes:
-          - ./html:/usr/share/nginx/html
-          - db_data:/var/lib/mysql`,
+  web:
+    image: nginx
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - db_data:/var/lib/mysql`,
         xp: 100 
       },
       { 
@@ -227,26 +224,26 @@ const App = {
         level: 2,
         instruction: 'Se quiere usar "condition: service_healthy" pero la estructura es incorrecta:',
         broken_yaml: `services:
-      api:
-        image: node:20
-        depends_on:
-          - db
-            condition: service_healthy`,
+  api:
+    image: node:20
+    depends_on:
+      - db
+        condition: service_healthy`,
         question: '¿Por qué esta estructura de "depends_on" es inválida?',
         options: [
           'La clave "condition" solo funciona con Redis, no con bases de datos',
-          '"depends_on" con condiciones debe ser un mapa anidado, no una lista', // ✅
+          '"depends_on" con condiciones debe ser un mapa anidado, no una lista',
           'Falta la clave "healthcheck" en el servicio "api"',
           'El guion "-" no puede usarse junto con claves anidadas'
         ],
         answer: '"depends_on" con condiciones debe ser un mapa anidado, no una lista',
         hint: 'Para usar "condition", la sintaxis es: depends_on: { db: { condition: service_healthy } }',
         solution: `services:
-      api:
-        image: node:20
-        depends_on:
-          db:
-            condition: service_healthy`,
+  api:
+    image: node:20
+    depends_on:
+      db:
+        condition: service_healthy`,
         xp: 110 
       },
       { 
@@ -256,28 +253,28 @@ const App = {
         level: 2,
         instruction: 'No se pueden mezclar formatos en la misma clave "environment":',
         broken_yaml: `services:
-      app:
-        image: python:3.12
-        environment:
-          - APP_ENV=production
-          DEBUG: "true"
-          - API_KEY=${API_KEY}`,
+  app:
+    image: python:3.12
+    environment:
+      - APP_ENV=production
+      DEBUG: "true"
+      - API_KEY=\${API_KEY}`,
         question: '¿Qué regla de YAML se está violando en "environment"?',
         options: [
-          'No se pueden usar variables de entorno con ${...} en Docker Compose',
-          'No se puede mezclar sintaxis de lista (- KEY=VAL) con sintaxis de mapa (KEY: VAL)', // ✅
+          'No se pueden usar variables de entorno con \${...} en Docker Compose',
+          'No se puede mezclar sintaxis de lista (- KEY=VAL) con sintaxis de mapa (KEY: VAL)',
           'Las claves con guion bajo no son válidas en YAML',
           'El valor "true" debe ir siempre sin comillas'
         ],
         answer: 'No se puede mezclar sintaxis de lista (- KEY=VAL) con sintaxis de mapa (KEY: VAL)',
         hint: 'Elige un formato: o todo lista (- KEY=VAL) o todo mapa (KEY: VAL). No los mezcles.',
         solution: `services:
-      app:
-        image: python:3.12
-        environment:
-          APP_ENV: production
-          DEBUG: "true"
-          API_KEY: ${API_KEY}`,
+  app:
+    image: python:3.12
+    environment:
+      APP_ENV: production
+      DEBUG: "true"
+      API_KEY: \${API_KEY}`,
         xp: 100 
       },
       { 
@@ -287,24 +284,24 @@ const App = {
         level: 1,
         instruction: 'Este YAML parece perfecto... pero tiene un carácter prohibido:',
         broken_yaml: `services:
-    \tweb:
-    \t\timage: nginx
-    \t\tports:
-    \t\t\t- "8080:80"`,
+\tweb:
+\t\timage: nginx
+\t\tports:
+\t\t\t- "8080:80"`,
         question: '¿Qué carácter invisible está causando el error de parseo?',
         options: [
           'Caracteres Unicode no ASCII en los nombres de clave',
-          'Tabuladores (\\t) en lugar de espacios para la indentación', // ✅
+          'Tabuladores (\\t) en lugar de espacios para la indentación',
           'Saltos de línea estilo Windows (\\r\\n) en lugar de Unix (\\n)',
           'Espacios finales al final de cada línea'
         ],
         answer: 'Tabuladores (\\t) en lugar de espacios para la indentación',
         hint: 'YAML prohíbe explícitamente los tabuladores. Configura tu editor para usar 2 espacios.',
         solution: `services:
-      web:
-        image: nginx
-        ports:
-          - "8080:80"`,
+  web:
+    image: nginx
+    ports:
+      - "8080:80"`,
         xp: 80 
       },
       { 
@@ -314,12 +311,12 @@ const App = {
         level: 1,
         instruction: 'En Compose moderno "version" se omite, pero si se usa debe ser string:',
         broken_yaml: `version: 3.8
-    services:
-      web:
-        image: nginx`,
+services:
+  web:
+    image: nginx`,
         question: '¿Por qué "version: 3.8" sin comillas puede causar problemas?',
         options: [
-          'YAML lo parsea como número float 3.8, no como la cadena "3.8"', // ✅
+          'YAML lo parsea como número float 3.8, no como la cadena "3.8"',
           'La versión 3.8 está obsoleta y Docker la rechaza',
           'Las versiones deben ser enteros: 3, 4, 5...',
           'No hay problema, 3.8 es válido tal cual'
@@ -327,9 +324,9 @@ const App = {
         answer: 'YAML lo parsea como número float 3.8, no como la cadena "3.8"',
         hint: 'Si usas "version", ponla entre comillas: "3.8". En Compose v2+ mejor omitirla totalmente.',
         solution: `# En Compose moderno se omite "version"
-    services:
-      web:
-        image: nginx`,
+services:
+  web:
+    image: nginx`,
         xp: 70 
       },
       { 
@@ -339,26 +336,26 @@ const App = {
         level: 3,
         instruction: 'El comando del healthcheck debe ser un array explícito en Docker Compose:',
         broken_yaml: `services:
-      web:
-        image: nginx
-        healthcheck:
-          test: curl -f http://localhost/
-          interval: 30s`,
+  web:
+    image: nginx
+    healthcheck:
+      test: curl -f http://localhost/
+      interval: 30s`,
         question: '¿Qué formato debe tener el valor de "test" en un healthcheck?',
         options: [
           'Debe ser un string simple con el comando completo',
-          'Debe ser un array JSON explícito: ["CMD", "curl", "-f", "url"]', // ✅
+          'Debe ser un array JSON explícito: ["CMD", "curl", "-f", "url"]',
           'Debe referenciar un script externo con "script: /ruta/check.sh"',
           'Debe usar la sintaxis de shell: test: "bash -c \'curl -f...\'"'
         ],
         answer: 'Debe ser un array JSON explícito: ["CMD", "curl", "-f", "url"]',
         hint: 'Docker Compose requiere: test: ["CMD", "ejecutable", "arg1", "arg2"] o test: ["CMD-SHELL", "comando"]',
         solution: `services:
-      web:
-        image: nginx
-        healthcheck:
-          test: ["CMD", "curl", "-f", "http://localhost/"]
-          interval: 30s`,
+  web:
+    image: nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s`,
         xp: 120 
       },
       { 
@@ -368,34 +365,34 @@ const App = {
         level: 2,
         instruction: 'La configuración de red tiene un valor booleano mal escrito:',
         broken_yaml: `services:
-      api:
-        image: node:20
-        networks:
-          - internal_net
-    
+  api:
+    image: node:20
     networks:
-      internal_net:
-        driver: bridge
-        internal: True`,
+      - internal_net
+
+networks:
+  internal_net:
+    driver: bridge
+    internal: True`,
         question: '¿Qué valor booleano está mal escrito en la configuración de red?',
         options: [
           'driver: bridge debe ir en minúsculas: "bridge"',
-          'internal: True debe ser internal: true (booleano en minúscula)', // ✅
+          'internal: True debe ser internal: true (booleano en minúscula)',
           'El nombre de la red no puede tener guion bajo',
           'La clave "internal" no existe en Docker Compose'
         ],
         answer: 'internal: True debe ser internal: true (booleano en minúscula)',
         hint: 'En YAML, los booleanos reales van en minúscula: true/false. "True" con mayúscula puede interpretarse como string.',
         solution: `services:
-      api:
-        image: node:20
-        networks:
-          - internal_net
-    
+  api:
+    image: node:20
     networks:
-      internal_net:
-        driver: bridge
-        internal: true`,
+      - internal_net
+
+networks:
+  internal_net:
+    driver: bridge
+    internal: true`,
         xp: 90 
       },
       { 
@@ -405,16 +402,16 @@ const App = {
         level: 3,
         instruction: 'Este YAML tiene múltiples errores. Identifica el MÁS CRÍTICO que impide el parseo:',
         broken_yaml: `services:
-    web:
-      image:nginx:latest
-      ports:
-      -8080:80
-      environment:
-        DEBUG:yes
-      restart:Always`,
+web:
+  image:nginx:latest
+  ports:
+  -8080:80
+  environment:
+    DEBUG:yes
+  restart:Always`,
         question: '¿Cuál es el error que primero rompería el parseo de YAML?',
         options: [
-          'La falta de espacio tras ":" en "image:nginx" y "DEBUG:yes"', // ✅
+          'La falta de espacio tras ":" en "image:nginx" y "DEBUG:yes"',
           'Usar la etiqueta :latest en producción',
           'El valor "Always" en restart debería ser "unless-stopped"',
           'Falta declarar el volumen db_data al final del archivo'
@@ -422,16 +419,15 @@ const App = {
         answer: 'La falta de espacio tras ":" en "image:nginx" y "DEBUG:yes"',
         hint: 'En YAML, SIEMPRE debe haber un espacio después de los dos puntos: "clave: valor". Sin espacio, es error de sintaxis.',
         solution: `services:
-      web:
-        image: nginx:latest
-        ports:
-          - "8080:80"
-        environment:
-          DEBUG: "yes"
-        restart: unless-stopped`,
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    environment:
+      DEBUG: "yes"
+    restart: unless-stopped`,
         xp: 150 
       }
-    ]
     ],
     validacion_herramientas: [
       { 
@@ -1042,18 +1038,16 @@ const App = {
   },
 
   updateProgressUI() {
-    // Calcula progreso global (aproximado)
     let totalCompleted = 0;
     Object.values(this.state.progress).forEach(mod => {
       totalCompleted += Object.values(mod).filter(v => v === 'completed').length;
     });
-    const totalTasks = 70; // 7 módulos * 10
+    const totalTasks = 70;
     const pct = Math.min((totalCompleted / totalTasks) * 100, 100);
     
     document.querySelectorAll('.progress-fill').forEach(el => el.style.width = `${pct}%`);
     document.querySelectorAll('#xp-display').forEach(el => el.textContent = `${this.state.xp} XP`);
     
-    // Actualizar contadores locales si existen
     const moduleCount = this.state.currentModule ? Object.values(this.state.progress[this.state.currentModule] || {}).filter(v => v === 'completed').length : 0;
     document.querySelectorAll('#completed-count').forEach(el => el.textContent = moduleCount);
     document.querySelectorAll('#xp-count').forEach(el => el.textContent = this.state.xp);
@@ -1068,7 +1062,6 @@ const App = {
         btn.classList.add('active');
         document.getElementById(target)?.classList.add('active');
         
-        // Si entra en la pestaña de reto, renderizar el grid
         if (target === 'reto') {
           this.renderTaskGrid(this.state.currentModule);
         }
@@ -1090,7 +1083,6 @@ const App = {
   detectModule() {
     const path = window.location.pathname.split('/').pop().replace('.html', '');
     this.state.currentModule = path;
-    // Si ya está en la pestaña reto al cargar, renderizar
     if (document.querySelector('.tab-btn[data-tab="reto"].active')) {
       this.renderTaskGrid(path);
     }
@@ -1101,7 +1093,6 @@ const App = {
     const editorArea = document.getElementById('task-editor');
     if (!container || !this.exercises[module]) return;
 
-    // Limpiar área de editor al cambiar de vista
     if (editorArea) editorArea.innerHTML = '';
     if (editorArea) editorArea.classList.remove('active');
 
@@ -1133,7 +1124,6 @@ const App = {
     
     if (!editorArea) return;
 
-    // Marcar tarjeta activa visualmente
     if (container) {
       Array.from(container.children).forEach((c, i) => c.classList.toggle('active', i === index));
     }
@@ -1142,14 +1132,13 @@ const App = {
     
     let html = `<h3>Tarea ${index + 1}: ${ex.title}</h3>`;
     
-    // ✅ AÑADIDO: Mostrar instrucción clara si existe
     if (ex.instruction) {
       html += `<div style="background:var(--surface-alt); padding:1rem; border-radius:6px; margin-bottom:1rem; border-left:4px solid var(--primary);">
         <strong>📝 Instrucción:</strong><br>${ex.instruction}
       </div>`;
     }
 
-    // 🆕 NUEVO: Renderizado para ejercicios de detección de errores (Opción C - Nivel 1)
+    // 🆕 Renderizado para ejercicios de detección de errores
     if (ex.type === 'error_detect') {
       html += `
         <div class="yaml-broken" style="background:#1e1e1e;color:#f8f8f2;padding:1rem;border-radius:6px;font-family:monospace;white-space:pre;overflow-x:auto;margin:1rem 0;border-left:4px solid #ff6b6b;">
@@ -1169,7 +1158,7 @@ const App = {
 
     html += `
       <div class="task-controls">
-        ${ex.type !== 'mcq' ? '<button class="btn btn-outline" id="btn-template">📄 Cargar Plantilla</button>' : ''}
+        ${ex.type !== 'mcq' && ex.type !== 'error_detect' ? '<button class="btn btn-outline" id="btn-template">📄 Cargar Plantilla</button>' : ''}
         <button class="btn btn-outline" id="btn-hint">💡 Pista</button>
         <button class="btn primary" id="btn-validate">✅ Validar</button>
         <button class="btn btn-outline" id="btn-solution">👁️ Ver Respuesta</button>
@@ -1186,24 +1175,20 @@ const App = {
   bindTaskButtons(module, index, ex) {
     const editor = document.getElementById('yaml-input');
     
-    // Botón Plantilla
     document.getElementById('btn-template')?.addEventListener('click', () => {
       const editor = document.getElementById('yaml-input');
       if (editor && ex.template) {
-        editor.value = ex.template; // Aquí sí se llena con la plantilla
-        // Opcional: Guardar inmediatamente como borrador
+        editor.value = ex.template;
         this.saveInput(module, index, ex.template); 
       }
     });
 
-    // Botón Pista
     document.getElementById('btn-hint')?.addEventListener('click', () => {
       const box = document.getElementById('hint-box');
       box.innerHTML = `💡 <strong>Pista:</strong> ${ex.hint}`;
       box.classList.toggle('show');
     });
 
-    // Botón Ver Respuesta
     document.getElementById('btn-solution')?.addEventListener('click', () => {
       const box = document.getElementById('solution-box');
       const code = box.querySelector('code');
@@ -1211,13 +1196,18 @@ const App = {
       box.classList.toggle('show');
     });
 
-    // Botón Validar
     document.getElementById('btn-validate')?.addEventListener('click', () => {
       let input = '';
       if (ex.type === 'mcq') {
         const checked = document.querySelector(`input[name="mcq_${index}"]:checked`);
         input = checked ? checked.value : '';
-      } else if (editor) {
+      } 
+      // 🆕 Capturar opción seleccionada en error_detect
+      else if (ex.type === 'error_detect') {
+        const checked = document.querySelector(`input[name="error_detect_${index}"]:checked`);
+        input = checked ? checked.value : '';
+      } 
+      else if (editor) {
         input = editor.value;
         this.saveInput(module, index, input);
       }
@@ -1240,30 +1230,27 @@ const App = {
     });
   },
 
-validateTask(ex, input) {
-  if (!input) return false;
-  const norm = input.toLowerCase();
-  
-  // 🆕 Validación para error_detect (comparación exacta de opción seleccionada)
-  if (ex.type === 'error_detect') {
-    return input === ex.answer;
-  }
-  
-  // 1. Rechazar tabuladores inmediatamente
-  if (norm.includes('\t')) return false; 
-  
-  // 2. Rechazar falta de espacio tras dos puntos (ej: "clave:valor")
-  if (/:[a-z0-9_-]/.test(norm)) return false; 
+  validateTask(ex, input) {
+    if (!input) return false;
+    const norm = input.toLowerCase();
+    
+    // 🆕 Validación para error_detect (comparación exacta de opción seleccionada)
+    if (ex.type === 'error_detect') {
+      return input === ex.answer;
+    }
+    
+    if (norm.includes('\t')) return false; 
+    if (/:[a-z0-9_-]/.test(norm)) return false; 
 
-  if (ex.type === 'mcq') {
-    return norm.includes(ex.answer.toLowerCase());
-  }
-  
-  return ex.keywords.every(k => {
-    const cleanKeyword = k.trim().toLowerCase();
-    return norm.includes(cleanKeyword);
-  });
-},
+    if (ex.type === 'mcq') {
+      return norm.includes(ex.answer.toLowerCase());
+    }
+    
+    return ex.keywords.every(k => {
+      const cleanKeyword = k.trim().toLowerCase();
+      return norm.includes(cleanKeyword);
+    });
+  },
 
   getTaskStatus(module, index) {
     return this.state.progress[module]?.[index] || 'pending';
@@ -1273,7 +1260,7 @@ validateTask(ex, input) {
     if (!this.state.progress[module]) this.state.progress[module] = {};
     this.state.progress[module][index] = status;
     localStorage.setItem('sc_progress', JSON.stringify(this.state.progress));
-    this.renderTaskGrid(this.state.currentModule); // Refrescar grid
+    this.renderTaskGrid(this.state.currentModule);
     this.updateProgressUI();
   },
 
@@ -1288,15 +1275,6 @@ validateTask(ex, input) {
   },
 
   addXP(amount, exerciseId) {
-    // Evitar doble XP por mismo ejercicio en misma sesión si ya estaba completado
-    // Pero como setTaskStatus ya marca completado, simplificamos:
-    // Solo sumamos si no estaba completado antes de este click (lógica manejada en setTaskStatus idealmente, pero aquí basta con sumar si es correcto)
-    // Para ser estrictos, comprobamos si ya estaba en completed array global si usáramos ese sistema, 
-    // pero con el nuevo sistema de progress object, podemos confiar en que el usuario gana XP al completar.
-    
-    // Nota: Para evitar spam de XP recargando, deberíamos guardar XP ganada por ID.
-    // Simplificación: Sumamos XP siempre que valide correctamente y marque como completado por primera vez en la sesión.
-    
     const xpKey = `xp_${exerciseId}`;
     if (!sessionStorage.getItem(xpKey)) {
       this.state.xp += amount;

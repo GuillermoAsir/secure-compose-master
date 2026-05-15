@@ -1006,60 +1006,78 @@ const App = {
     container.appendChild(grid);
   },
 
-  openTask(module, index) {
-    this.state.activeTaskIndex = index;
-    const ex = this.exercises[module][index];
-    const editorArea = document.getElementById('task-editor');
-    const container = document.getElementById('task-container');
-    
-    if (!editorArea) return;
+openTask(module, index) {
+  this.state.activeTaskIndex = index;
+  const ex = this.exercises[module][index];
+  const editorArea = document.getElementById('task-editor');
+  const container = document.getElementById('task-container');
+  
+  if (!editorArea) return;
 
-    if (container) {
-      Array.from(container.children).forEach((c, i) => c.classList.toggle('active', i === index));
-    }
+  if (container) {
+    Array.from(container.children).forEach((c, i) => c.classList.toggle('active', i === index));
+  }
 
-    editorArea.classList.add('active');
-    
-    let html = `<h3>Tarea ${index + 1}: ${ex.title}</h3>`;
-    
-    if (ex.instruction) {
-      html += `<div style="background:var(--surface-alt); padding:1rem; border-radius:6px; margin-bottom:1rem; border-left:4px solid var(--primary);">
-        <strong>📝 Instrucción:</strong><br>${ex.instruction}
-      </div>`;
-    }
+  editorArea.classList.add('active');
+  
+  let html = `<h3>Tarea ${index + 1}: ${ex.title}</h3>`;
+  
+  if (ex.instruction) {
+    html += `<div style="background:var(--surface-alt); padding:1rem; border-radius:6px; margin-bottom:1rem; border-left:4px solid var(--primary);">
+      <strong>📝 Instrucción:</strong><br>${ex.instruction}
+    </div>`;
+  }
 
-    if (ex.type === 'error_detect') {
-      html += `
-        <div class="yaml-broken" style="background:#1e1e1e;color:#f8f8f2;padding:1rem;border-radius:6px;font-family:monospace;white-space:pre;overflow-x:auto;margin:1rem 0;border-left:4px solid #ff6b6b;">
-          ${ex.broken_yaml.replace(/\\n/g, '<br>')}
-        </div>
-        <p style="margin-bottom:1rem;font-weight:500;">${ex.question}</p>
-        <div class="options-grid" style="display:grid;gap:0.5rem;">
-          ${ex.options.map((opt, i) => `
-            <label class="option-card" style="padding:0.8rem;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s;">
-              <input type="radio" name="error_detect_${index}" value="${opt}" style="accent-color:var(--primary);">
-              <span>${opt}</span>
-            </label>
-          `).join('')}
-        </div>
-      `;
-    }
-
+  // 🆕 Estructura corregida: if / else if / else (mutuamente excluyentes)
+  if (ex.type === 'error_detect') {
+    // Renderizar YAML con errores + opciones de respuesta
     html += `
-      <div class="task-controls">
-        ${ex.type !== 'mcq' && ex.type !== 'error_detect' ? '<button class="btn btn-outline" id="btn-template">📄 Cargar Plantilla</button>' : ''}
-        <button class="btn btn-outline" id="btn-hint">💡 Pista</button>
-        <button class="btn primary" id="btn-validate">✅ Validar</button>
-        <button class="btn btn-outline" id="btn-solution">👁️ Ver Respuesta</button>
+      <div class="yaml-broken" style="background:#1e1e1e;color:#f8f8f2;padding:1rem;border-radius:6px;font-family:monospace;white-space:pre;overflow-x:auto;margin:1rem 0;border-left:4px solid #ff6b6b;line-height:1.4;">
+        ${ex.broken_yaml.replace(/\n/g, '<br>')}
       </div>
-      <div id="hint-box" class="hint-box"></div>
-      <div id="feedback" class="feedback"></div>
-      <div id="solution-box" class="solution-box"><pre><code></code></pre></div>
+      <p style="margin-bottom:1rem;font-weight:500;">${ex.question}</p>
+      <div class="options-grid" style="display:grid;gap:0.5rem;">
+        ${ex.options.map((opt, i) => `
+          <label class="option-card" style="padding:0.8rem;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s;">
+            <input type="radio" name="error_detect_${index}" value="${opt}" style="accent-color:var(--primary);">
+            <span>${opt}</span>
+          </label>
+        `).join('')}
+      </div>
     `;
+  }
+  else if (ex.type === 'mcq') {
+    // Renderizar pregunta MCQ clásica
+    html += `<p style="margin-bottom:1rem; font-weight:500;">${ex.question}</p>` + 
+      ex.options.map((opt, i) => 
+        `<div style="margin:0.4rem 0"><label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;"><input type="radio" name="mcq_${index}" value="${opt}"> ${opt}</label></div>`
+      ).join('');
+  }
+  else {
+    // Renderizar editor de código para type: code, fix, cmd
+    const initialContent = '';
+    html += `
+      <div class="editor-wrap">
+        <textarea id="yaml-input" rows="10" placeholder="Escribe tu solución aquí o carga la plantilla...">${initialContent}</textarea>
+      </div>`;
+  }
 
-    editorArea.innerHTML = html;
-    this.bindTaskButtons(module, index, ex);
-  },
+  // Controles comunes (se muestran para todos los tipos)
+  html += `
+    <div class="task-controls">
+      ${ex.type !== 'mcq' && ex.type !== 'error_detect' ? '<button class="btn btn-outline" id="btn-template">📄 Cargar Plantilla</button>' : ''}
+      <button class="btn btn-outline" id="btn-hint">💡 Pista</button>
+      <button class="btn primary" id="btn-validate">✅ Validar</button>
+      <button class="btn btn-outline" id="btn-solution">👁️ Ver Respuesta</button>
+    </div>
+    <div id="hint-box" class="hint-box"></div>
+    <div id="feedback" class="feedback"></div>
+    <div id="solution-box" class="solution-box"><pre><code></code></pre></div>
+  `;
+
+  editorArea.innerHTML = html;
+  this.bindTaskButtons(module, index, ex);
+},
 
   bindTaskButtons(module, index, ex) {
     const editor = document.getElementById('yaml-input');

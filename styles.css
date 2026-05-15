@@ -254,3 +254,29 @@ th { background: var(--surface-alt); font-weight: 600; }
     font-size: 12px;
   }
 }
+/* Añadir en tu <style> o CSS externo */
+.yaml-broken {
+  position: relative;
+}
+.yaml-broken::before {
+  content: "❌ YAML con errores";
+  position: absolute;
+  top: -1.2rem;
+  left: 1rem;
+  background: #ff6b6b;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.option-card:hover {
+  border-color: var(--primary);
+  background: var(--surface-alt);
+}
+
+.option-card:has(input:checked) {
+  border-color: var(--success);
+  background: rgba(46, 204, 113, 0.1);
+}

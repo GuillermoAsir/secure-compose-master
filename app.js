@@ -6,13 +6,11 @@ const App = {
   state: {
     theme: localStorage.getItem('theme') || 'light',
     xp: parseInt(localStorage.getItem('xp') || '0'),
-    // Estructura: { modulo: { indice: 'completed', indice_input: 'yaml...' } }
     progress: JSON.parse(localStorage.getItem('sc_progress') || '{}'),
     currentModule: null,
     activeTaskIndex: null
   },
 
-  // 📚 Base de datos de ejercicios (7 módulos x 10 tareas)
   exercises: {
     mapas_y_listas: [
       { 
@@ -136,25 +134,17 @@ const App = {
         type: 'error_detect',
         level: 1,
         instruction: 'Identifica el error de sintaxis en este YAML:',
-        broken_yaml: `services:
-  web:
-    image: nginx
-    ports:
-    - 8080:80`,
+        broken_yaml: 'services:\nweb:\n  image: nginx\n  ports:\n  - 8080:80',
         question: '¿Cuál es el error principal?',
         options: [
           'Falta comillas en el puerto',
-          'La lista de puertos no está correctamente indentada',
+          'La clave "web" no está indentada bajo "services"',
           'La clave "ports" no lleva dos puntos',
           'El servicio "web" no tiene imagen'
         ],
-        answer: 'La lista de puertos no está correctamente indentada',
-        hint: 'Los elementos de lista ("-") deben estar sangrados 2 espacios más que su clave padre.',
-        solution: `services:
-  web:
-    image: nginx
-    ports:
-      - "8080:80"`,
+        answer: 'La clave "web" no está indentada bajo "services"',
+        hint: 'En YAML, los servicios deben estar indentados 2 espacios bajo "services:". web debería ser "  web".',
+        solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
         xp: 80 
       },
       { 
@@ -163,13 +153,7 @@ const App = {
         type: 'error_detect',
         level: 1,
         instruction: 'Este YAML tiene valores que YAML interpretará como booleanos sin querer:',
-        broken_yaml: `services:
-  app:
-    image: node:20
-    restart: True
-    environment:
-      DEBUG: yes
-      PROD: off`,
+        broken_yaml: 'services:\n  app:\n    image: node:20\n    restart: True\n    environment:\n      DEBUG: yes\n      PROD: off',
         question: '¿Qué problema tienen los valores "True", "yes" y "off"?',
         options: [
           'Son palabras reservadas de Docker y no se pueden usar',
@@ -179,13 +163,7 @@ const App = {
         ],
         answer: 'YAML los parsea como booleanos, no como strings literales',
         hint: 'Si quieres que "yes" sea texto, usa comillas: "yes". Los booleanos reales van en minúscula: true/false.',
-        solution: `services:
-  app:
-    image: node:20
-    restart: true
-    environment:
-      DEBUG: "yes"
-      PROD: "off"`,
+        solution: 'services:\n  app:\n    image: node:20\n    restart: true\n    environment:\n      DEBUG: "yes"\n      PROD: "off"',
         xp: 90 
       },
       { 
@@ -194,12 +172,7 @@ const App = {
         type: 'error_detect',
         level: 2,
         instruction: 'La sintaxis de volúmenes tiene un error sutil pero crítico:',
-        broken_yaml: `services:
-  web:
-    image: nginx
-    volumes:
-     -./html:/usr/share/nginx/html
-     -db_data:/var/lib/mysql`,
+        broken_yaml: 'services:\n  web:\n    image: nginx\n    volumes:\n     -./html:/usr/share/nginx/html\n     -db_data:/var/lib/mysql',
         question: '¿Qué error de sintaxis impide que este YAML funcione?',
         options: [
           'Las rutas relativas no pueden empezar por "./"',
@@ -209,12 +182,7 @@ const App = {
         ],
         answer: 'Falta un espacio después del guion "-" en cada elemento de la lista',
         hint: 'Correcto: "- ./ruta:destino". Incorrecto: "-./ruta:destino". El espacio tras el guion es obligatorio.',
-        solution: `services:
-  web:
-    image: nginx
-    volumes:
-      - ./html:/usr/share/nginx/html
-      - db_data:/var/lib/mysql`,
+        solution: 'services:\n  web:\n    image: nginx\n    volumes:\n      - ./html:/usr/share/nginx/html\n      - db_data:/var/lib/mysql',
         xp: 100 
       },
       { 
@@ -223,12 +191,7 @@ const App = {
         type: 'error_detect',
         level: 2,
         instruction: 'Se quiere usar "condition: service_healthy" pero la estructura es incorrecta:',
-        broken_yaml: `services:
-  api:
-    image: node:20
-    depends_on:
-      - db
-        condition: service_healthy`,
+        broken_yaml: 'services:\n  api:\n    image: node:20\n    depends_on:\n      - db\n        condition: service_healthy',
         question: '¿Por qué esta estructura de "depends_on" es inválida?',
         options: [
           'La clave "condition" solo funciona con Redis, no con bases de datos',
@@ -237,13 +200,8 @@ const App = {
           'El guion "-" no puede usarse junto con claves anidadas'
         ],
         answer: '"depends_on" con condiciones debe ser un mapa anidado, no una lista',
-        hint: 'Para usar "condition", la sintaxis es: depends_on: { db: { condition: service_healthy } }',
-        solution: `services:
-  api:
-    image: node:20
-    depends_on:
-      db:
-        condition: service_healthy`,
+        hint: 'Para usar "condition", la sintaxis es: depends_on:\n  db:\n    condition: service_healthy',
+        solution: 'services:\n  api:\n    image: node:20\n    depends_on:\n      db:\n        condition: service_healthy',
         xp: 110 
       },
       { 
@@ -252,29 +210,17 @@ const App = {
         type: 'error_detect',
         level: 2,
         instruction: 'No se pueden mezclar formatos en la misma clave "environment":',
-        broken_yaml: `services:
-  app:
-    image: python:3.12
-    environment:
-      - APP_ENV=production
-      DEBUG: "true"
-      - API_KEY=\${API_KEY}`,
+        broken_yaml: 'services:\n  app:\n    image: python:3.12\n    environment:\n      - APP_ENV=production\n      DEBUG: "true"\n      - API_KEY=${API_KEY}',
         question: '¿Qué regla de YAML se está violando en "environment"?',
         options: [
-          'No se pueden usar variables de entorno con \${...} en Docker Compose',
+          'No se pueden usar variables de entorno con ${...} en Docker Compose',
           'No se puede mezclar sintaxis de lista (- KEY=VAL) con sintaxis de mapa (KEY: VAL)',
           'Las claves con guion bajo no son válidas en YAML',
           'El valor "true" debe ir siempre sin comillas'
         ],
         answer: 'No se puede mezclar sintaxis de lista (- KEY=VAL) con sintaxis de mapa (KEY: VAL)',
         hint: 'Elige un formato: o todo lista (- KEY=VAL) o todo mapa (KEY: VAL). No los mezcles.',
-        solution: `services:
-  app:
-    image: python:3.12
-    environment:
-      APP_ENV: production
-      DEBUG: "true"
-      API_KEY: \${API_KEY}`,
+        solution: 'services:\n  app:\n    image: python:3.12\n    environment:\n      APP_ENV: production\n      DEBUG: "true"\n      API_KEY: ${API_KEY}',
         xp: 100 
       },
       { 
@@ -283,11 +229,7 @@ const App = {
         type: 'error_detect',
         level: 1,
         instruction: 'Este YAML parece perfecto... pero tiene un carácter prohibido:',
-        broken_yaml: `services:
-\tweb:
-\t\timage: nginx
-\t\tports:
-\t\t\t- "8080:80"`,
+        broken_yaml: 'services:\n\tweb:\n\t\timage: nginx\n\t\tports:\n\t\t\t- "8080:80"',
         question: '¿Qué carácter invisible está causando el error de parseo?',
         options: [
           'Caracteres Unicode no ASCII en los nombres de clave',
@@ -297,11 +239,7 @@ const App = {
         ],
         answer: 'Tabuladores (\\t) en lugar de espacios para la indentación',
         hint: 'YAML prohíbe explícitamente los tabuladores. Configura tu editor para usar 2 espacios.',
-        solution: `services:
-  web:
-    image: nginx
-    ports:
-      - "8080:80"`,
+        solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
         xp: 80 
       },
       { 
@@ -310,10 +248,7 @@ const App = {
         type: 'error_detect',
         level: 1,
         instruction: 'En Compose moderno "version" se omite, pero si se usa debe ser string:',
-        broken_yaml: `version: 3.8
-services:
-  web:
-    image: nginx`,
+        broken_yaml: 'version: 3.8\nservices:\n  web:\n    image: nginx',
         question: '¿Por qué "version: 3.8" sin comillas puede causar problemas?',
         options: [
           'YAML lo parsea como número float 3.8, no como la cadena "3.8"',
@@ -323,10 +258,7 @@ services:
         ],
         answer: 'YAML lo parsea como número float 3.8, no como la cadena "3.8"',
         hint: 'Si usas "version", ponla entre comillas: "3.8". En Compose v2+ mejor omitirla totalmente.',
-        solution: `# En Compose moderno se omite "version"
-services:
-  web:
-    image: nginx`,
+        solution: '# En Compose moderno se omite "version"\nservices:\n  web:\n    image: nginx',
         xp: 70 
       },
       { 
@@ -335,12 +267,7 @@ services:
         type: 'error_detect',
         level: 3,
         instruction: 'El comando del healthcheck debe ser un array explícito en Docker Compose:',
-        broken_yaml: `services:
-  web:
-    image: nginx
-    healthcheck:
-      test: curl -f http://localhost/
-      interval: 30s`,
+        broken_yaml: 'services:\n  web:\n    image: nginx\n    healthcheck:\n      test: curl -f http://localhost/\n      interval: 30s',
         question: '¿Qué formato debe tener el valor de "test" en un healthcheck?',
         options: [
           'Debe ser un string simple con el comando completo',
@@ -350,12 +277,7 @@ services:
         ],
         answer: 'Debe ser un array JSON explícito: ["CMD", "curl", "-f", "url"]',
         hint: 'Docker Compose requiere: test: ["CMD", "ejecutable", "arg1", "arg2"] o test: ["CMD-SHELL", "comando"]',
-        solution: `services:
-  web:
-    image: nginx
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s`,
+        solution: 'services:\n  web:\n    image: nginx\n    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost/"]\n      interval: 30s',
         xp: 120 
       },
       { 
@@ -364,16 +286,7 @@ services:
         type: 'error_detect',
         level: 2,
         instruction: 'La configuración de red tiene un valor booleano mal escrito:',
-        broken_yaml: `services:
-  api:
-    image: node:20
-    networks:
-      - internal_net
-
-networks:
-  internal_net:
-    driver: bridge
-    internal: True`,
+        broken_yaml: 'services:\n  api:\n    image: node:20\n    networks:\n      - internal_net\n\nnetworks:\n  internal_net:\n    driver: bridge\n    internal: True',
         question: '¿Qué valor booleano está mal escrito en la configuración de red?',
         options: [
           'driver: bridge debe ir en minúsculas: "bridge"',
@@ -383,16 +296,7 @@ networks:
         ],
         answer: 'internal: True debe ser internal: true (booleano en minúscula)',
         hint: 'En YAML, los booleanos reales van en minúscula: true/false. "True" con mayúscula puede interpretarse como string.',
-        solution: `services:
-  api:
-    image: node:20
-    networks:
-      - internal_net
-
-networks:
-  internal_net:
-    driver: bridge
-    internal: true`,
+        solution: 'services:\n  api:\n    image: node:20\n    networks:\n      - internal_net\n\nnetworks:\n  internal_net:\n    driver: bridge\n    internal: true',
         xp: 90 
       },
       { 
@@ -401,14 +305,7 @@ networks:
         type: 'error_detect',
         level: 3,
         instruction: 'Este YAML tiene múltiples errores. Identifica el MÁS CRÍTICO que impide el parseo:',
-        broken_yaml: `services:
-web:
-  image:nginx:latest
-  ports:
-  -8080:80
-  environment:
-    DEBUG:yes
-  restart:Always`,
+        broken_yaml: 'services:\nweb:\n  image:nginx:latest\n  ports:\n  -8080:80\n  environment:\n    DEBUG:yes\n  restart:Always',
         question: '¿Cuál es el error que primero rompería el parseo de YAML?',
         options: [
           'La falta de espacio tras ":" en "image:nginx" y "DEBUG:yes"',
@@ -418,14 +315,7 @@ web:
         ],
         answer: 'La falta de espacio tras ":" en "image:nginx" y "DEBUG:yes"',
         hint: 'En YAML, SIEMPRE debe haber un espacio después de los dos puntos: "clave: valor". Sin espacio, es error de sintaxis.',
-        solution: `services:
-  web:
-    image: nginx:latest
-    ports:
-      - "8080:80"
-    environment:
-      DEBUG: "yes"
-    restart: unless-stopped`,
+        solution: 'services:\n  web:\n    image: nginx:latest\n    ports:\n      - "8080:80"\n    environment:\n      DEBUG: "yes"\n    restart: unless-stopped',
         xp: 150 
       }
     ],
@@ -979,7 +869,7 @@ web:
         id: 'ex_k8s_08', 
         title: 'Multi-Documento', 
         type: 'mcq', 
-        question: '¿Por qué Kubernetes permite múltiples documentos YAML en un solo archivo separados por "---"?', 
+        question: '¿Por qué Kubernetes permite múltiples documentos en un solo archivo separados por "---"?', 
         options: ['Para agrupar recursos relacionados (ej: Deploy+Service) y aplicarlos juntos', 'Para ahorrar espacio', 'Es obligatorio por sintaxis', 'Para comprimir datos'], 
         answer: 'Para agrupar recursos relacionados (ej: Deploy+Service) y aplicarlos juntos', 
         hint: 'Permite gestionar toda la aplicación con un solo comando kubectl apply -f archivo.yml.', 
@@ -1138,11 +1028,10 @@ web:
       </div>`;
     }
 
-    // 🆕 Renderizado para ejercicios de detección de errores
     if (ex.type === 'error_detect') {
       html += `
         <div class="yaml-broken" style="background:#1e1e1e;color:#f8f8f2;padding:1rem;border-radius:6px;font-family:monospace;white-space:pre;overflow-x:auto;margin:1rem 0;border-left:4px solid #ff6b6b;">
-          ${ex.broken_yaml.replace(/\n/g, '<br>')}
+          ${ex.broken_yaml.replace(/\\n/g, '<br>')}
         </div>
         <p style="margin-bottom:1rem;font-weight:500;">${ex.question}</p>
         <div class="options-grid" style="display:grid;gap:0.5rem;">
@@ -1202,7 +1091,6 @@ web:
         const checked = document.querySelector(`input[name="mcq_${index}"]:checked`);
         input = checked ? checked.value : '';
       } 
-      // 🆕 Capturar opción seleccionada en error_detect
       else if (ex.type === 'error_detect') {
         const checked = document.querySelector(`input[name="error_detect_${index}"]:checked`);
         input = checked ? checked.value : '';
@@ -1234,7 +1122,6 @@ web:
     if (!input) return false;
     const norm = input.toLowerCase();
     
-    // 🆕 Validación para error_detect (comparación exacta de opción seleccionada)
     if (ex.type === 'error_detect') {
       return input === ex.answer;
     }

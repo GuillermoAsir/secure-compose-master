@@ -1,12 +1,20 @@
 /**
- * Secure Compose Master - Motor Principal v2.0
+ * Secure Compose Master - Motor Principal v2.1
  * Compatible con estructura dinámica de pestañas (#reto) y grid de tareas.
+ * Correcciones aplicadas: renderizado YAML, validación error_detect, progreso dinámico.
  */
 const App = {
   state: {
     theme: localStorage.getItem('theme') || 'light',
-    xp: parseInt(localStorage.getItem('xp') || '0'),
-    progress: JSON.parse(localStorage.getItem('sc_progress') || '{}'),
+    xp: parseInt(localStorage.getItem('xp') || '0', 10),
+    progress: (() => {
+      try {
+        return JSON.parse(localStorage.getItem('sc_progress') || '{}');
+      } catch (e) {
+        console.warn('Progreso corrupto, reiniciando');
+        return {};
+      }
+    })(),
     currentModule: null,
     activeTaskIndex: null
   },
@@ -127,206 +135,198 @@ const App = {
         xp: 120 
       }
     ],
-  detectar_errores: [
-    { 
-      id: 'ex_err_01',
-      title: 'Error en puertos',
-      type: 'error_detect',
-      level: 1,
-      instruction: 'Identifica el error de sintaxis en este YAML:',
-      broken_yaml: 'services:\n  web:\n    image: nginx\n    ports:\n      - 8080:80',
-      question: '¿Cuál es el error principal?',
-      options: [
-        'Faltan comillas en el puerto',
-        'La clave "web" no está indentada bajo "services"',
-        'La clave "ports" no lleva dos puntos',
-        'El servicio "web" no tiene imagen'
-      ],
-      answer: 'Faltan comillas en el puerto',
-      hint: 'Los puertos con formato host:container deben ir entre comillas.',
-      solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
-      xp: 80
-    },
+    detectar_errores: [
       { 
-      id: 'ex_err_02',
-      title: 'Valores booleanos implícitos',
-      type: 'error_detect',
-      level: 1,
-      instruction: 'Este YAML tiene valores que YAML interpretará como booleanos sin querer:',
-      broken_yaml: 'services:\n  app:\n    image: node:20\n    restart: True\n    environment:\n      DEBUG: yes\n      PROD: off',
-      question: '¿Qué problema tienen los valores "True", "yes" y "off"?',
-      options: [
-        'Son palabras reservadas de Docker y no se pueden usar',
-        'YAML los parsea como booleanos, no como strings literales',
-        'Deben ir siempre en mayúsculas para funcionar',
-        'No hay problema, YAML los acepta tal cual'
-      ],
-      answer: 'YAML los parsea como booleanos, no como strings literales',
-      hint: 'Si quieres que "yes" sea texto, usa comillas.',
-      solution: 'services:\n  app:\n    image: node:20\n    restart: true\n    environment:\n      DEBUG: "yes"\n      PROD: "off"',
-      xp: 90
-    },
-  
-    { 
-      id: 'ex_err_03',
-      title: 'Error en lista de volúmenes',
-      type: 'error_detect',
-      level: 2,
-      instruction: 'La sintaxis de volúmenes tiene un error sutil pero crítico:',
-      broken_yaml: 'services:\n  web:\n    image: nginx\n    volumes:\n     -./html:/usr/share/nginx/html\n     -db_data:/var/lib/mysql',
-      question: '¿Qué error de sintaxis impide que este YAML funcione?',
-      options: [
-        'Las rutas relativas no pueden empezar por "./"',
-        'Falta un espacio después del guion "-" en cada elemento de la lista',
-        'Los volúmenes con nombre no pueden usarse en bind mounts',
-        'La ruta de destino debe ir antes que la del host'
-      ],
-      answer: 'Falta un espacio después del guion "-" en cada elemento de la lista',
-      hint: 'Debe ser "- ./ruta".',
-      solution: 'services:\n  web:\n    image: nginx\n    volumes:\n      - ./html:/usr/share/nginx/html\n      - db_data:/var/lib/mysql',
-      xp: 100
-    },
-  
-    {
-      id: 'ex_err_04',
-      title: 'Error en depends_on',
-      type: 'error_detect',
-      level: 2,
-      instruction: 'Se quiere usar "condition: service_healthy" pero la estructura es incorrecta:',
-      broken_yaml: 'services:\n  api:\n    image: node:20\n    depends_on:\n      - db\n        condition: service_healthy',
-      question: '¿Por qué esta estructura de "depends_on" es inválida?',
-      options: [
-        'La clave "condition" solo funciona con Redis',
-        '"depends_on" con condiciones debe ser un mapa anidado, no una lista',
-        'Falta la clave "healthcheck" en el servicio "api"',
-        'El guion "-" no puede usarse junto con claves anidadas'
-      ],
-      answer: '"depends_on" con condiciones debe ser un mapa anidado, no una lista',
-      hint: 'La sintaxis correcta es: depends_on: { db: { condition: service_healthy } }',
-      solution: 'services:\n  api:\n    image: node:20\n    depends_on:\n      db:\n        condition: service_healthy',
-      xp: 110
-    },
-  
-    {
-      id: 'ex_err_05',
-      title: 'Error en environment',
-      type: 'error_detect',
-      level: 2,
-      instruction: 'No se pueden mezclar formatos en la misma clave "environment":',
-      broken_yaml: 'services:\n  app:\n    image: python:3.12\n    environment:\n      - APP_ENV=production\n      DEBUG: "true"\n      - API_KEY=${API_KEY}',
-      question: '¿Qué regla de YAML se está violando en "environment"?',
-      options: [
-        'No se pueden usar variables con ${...}',
-        'No se puede mezclar sintaxis de lista con sintaxis de mapa',
-        'Las claves con guion bajo no son válidas',
-        'El valor "true" debe ir sin comillas'
-      ],
-      answer: 'No se puede mezclar sintaxis de lista con sintaxis de mapa',
-      hint: 'Elige un formato: lista o mapa.',
-      solution: 'services:\n  app:\n    image: python:3.12\n    environment:\n      APP_ENV: production\n      DEBUG: "true"\n      API_KEY: ${API_KEY}',
-      xp: 100
-    },
-  
-    { 
-      id: 'ex_err_06',
-      title: 'Indentación inválida',
-      type: 'error_detect',
-      level: 1,
-      instruction: 'Este YAML parece perfecto... pero tiene un carácter prohibido:',
-      broken_yaml: 'services:\n\tweb:\n\t\timage: nginx\n\t\tports:\n\t\t\t- "8080:80"',
-      question: '¿Qué carácter invisible está causando el error?',
-      options: [
-        'Caracteres Unicode no ASCII',
-        'Tabuladores (\\t) en lugar de espacios',
-        'Saltos de línea Windows',
-        'Espacios finales'
-      ],
-      answer: 'Tabuladores (\\t) en lugar de espacios',
-      hint: 'YAML prohíbe los tabuladores.',
-      solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
-      xp: 80
-    },
-  
-    {
-      id: 'ex_err_07',
-      title: 'Error en version',
-      type: 'error_detect',
-      level: 1,
-      instruction: 'En Compose moderno "version" se omite, pero si se usa debe ser string:',
-      broken_yaml: 'version: 3.8\nservices:\n  web:\n    image: nginx',
-      question: '¿Por qué "version: 3.8" sin comillas puede causar problemas?',
-      options: [
-        'YAML lo parsea como número float',
-        'La versión 3.8 está obsoleta',
-        'Las versiones deben ser enteros',
-        'No hay problema'
-      ],
-      answer: 'YAML lo parsea como número float',
-      hint: 'Ponlo entre comillas.',
-      solution: '# En Compose moderno se omite "version"\nservices:\n  web:\n    image: nginx',
-      xp: 70
-    },
-  
-    {
-      id: 'ex_err_08',
-      title: 'Error en healthcheck',
-      type: 'error_detect',
-      level: 3,
-      instruction: 'El comando del healthcheck debe ser un array explícito:',
-      broken_yaml: 'services:\n  web:\n    image: nginx\n    healthcheck:\n      test: curl -f http://localhost/\n      interval: 30s',
-      question: '¿Qué formato debe tener "test"?',
-      options: [
-        'String simple',
-        'Array JSON explícito',
-        'Script externo',
-        'Sintaxis de shell'
-      ],
-      answer: 'Array JSON explícito',
-      hint: 'Debe ser ["CMD", "curl", "-f", "url"].',
-      solution: 'services:\n  web:\n    image: nginx\n    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost/"]\n      interval: 30s',
-      xp: 120
-    },
-  
-    {
-      id: 'ex_err_09',
-      title: 'Booleano incorrecto',
-      type: 'error_detect',
-      level: 2,
-      instruction: 'La configuración de red tiene un valor booleano mal escrito:',
-      broken_yaml: 'services:\n  api:\n    image: node:20\n    networks:\n      - internal_net\n\nnetworks:\n  internal_net:\n    driver: bridge\n    internal: True',
-      question: '¿Qué valor booleano está mal escrito?',
-      options: [
-        'driver: bridge debe ir en minúsculas',
-        'internal: True debe ser internal: true',
-        'El nombre de la red no puede tener guion bajo',
-        'La clave "internal" no existe'
-      ],
-      answer: 'internal: True debe ser internal: true',
-      hint: 'Los booleanos reales van en minúscula.',
-      solution: 'services:\n  api:\n    image: node:20\n    networks:\n      - internal_net\n\nnetworks:\n  internal_net:\n    driver: bridge\n    internal: true',
-      xp: 90
-    },
-  
-    {
-      id: 'ex_err_10',
-      title: 'Error crítico de sintaxis',
-      type: 'error_detect',
-      level: 3,
-      instruction: 'Este YAML tiene múltiples errores. Identifica el MÁS CRÍTICO:',
-      broken_yaml: 'services:\nweb:\n  image:nginx:latest\n  ports:\n  -8080:80\n  environment:\n    DEBUG:yes\n  restart:Always',
-      question: '¿Cuál es el error que primero rompería el parseo?',
-      options: [
-        'Falta espacio tras ":" en "image:nginx" y "DEBUG:yes"',
-        'Usar :latest en producción',
-        'El valor "Always" es incorrecto',
-        'Falta declarar un volumen'
-      ],
-      answer: 'Falta espacio tras ":" en "image:nginx" y "DEBUG:yes"',
-      hint: 'Siempre debe haber un espacio tras los dos puntos.',
-      solution: 'services:\n  web:\n    image: nginx:latest\n    ports:\n      - "8080:80"\n    environment:\n      DEBUG: "yes"\n    restart: unless-stopped',
-      xp: 150
-    }
-  ],
+        id: 'ex_err_01', 
+        title: 'Servicio sin Indentar', 
+        type: 'error_detect',
+        level: 1,
+        instruction: 'Identifica el error de sintaxis en este YAML:',
+        broken_yaml: 'services:\nweb:\n  image: nginx\n  ports:\n    - 8080:80',
+        question: '¿Cuál es el error principal?',
+        options: [
+          'Falta comillas en el puerto',
+          'La clave "web" no está indentada bajo "services"',
+          'La clave "ports" no lleva dos puntos',
+          'El servicio "web" no tiene imagen'
+        ],
+        answer: 'La clave "web" no está indentada bajo "services"',
+        hint: 'En YAML, los servicios deben estar indentados 2 espacios bajo "services:". "web" debería ser "  web".',
+        solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
+        xp: 80 
+      },
+      { 
+        id: 'ex_err_02', 
+        title: 'Booleanos Accidentales', 
+        type: 'error_detect',
+        level: 1,
+        instruction: 'Este YAML tiene valores que YAML interpretará como booleanos sin querer:',
+        broken_yaml: 'services:\n  app:\n    image: node:20\n    restart: True\n    environment:\n      DEBUG: yes\n      PROD: off',
+        question: '¿Qué problema tienen los valores "True", "yes" y "off"?',
+        options: [
+          'Son palabras reservadas de Docker y no se pueden usar',
+          'YAML los parsea como booleanos, no como strings literales',
+          'Deben ir siempre en mayúsculas para funcionar',
+          'No hay problema, YAML los acepta tal cual'
+        ],
+        answer: 'YAML los parsea como booleanos, no como strings literales',
+        hint: 'Si quieres que "yes" sea texto, usa comillas: "yes". Los booleanos reales van en minúscula: true/false.',
+        solution: 'services:\n  app:\n    image: node:20\n    restart: true\n    environment:\n      DEBUG: "yes"\n      PROD: "off"',
+        xp: 90 
+      },
+      { 
+        id: 'ex_err_03', 
+        title: 'Volúmenes: El Espacio Perdido', 
+        type: 'error_detect',
+        level: 2,
+        instruction: 'La sintaxis de volúmenes tiene un error sutil pero crítico:',
+        broken_yaml: 'services:\n  web:\n    image: nginx\n    volumes:\n     -./html:/usr/share/nginx/html\n     -db_data:/var/lib/mysql',
+        question: '¿Qué error de sintaxis impide que este YAML funcione?',
+        options: [
+          'Las rutas relativas no pueden empezar por "./"',
+          'Falta un espacio después del guion "-" en cada elemento de la lista',
+          'Los volúmenes con nombre no pueden usarse en bind mounts',
+          'La ruta de destino debe ir antes que la del host'
+        ],
+        answer: 'Falta un espacio después del guion "-" en cada elemento de la lista',
+        hint: 'Correcto: "- ./ruta:destino". Incorrecto: "-./ruta:destino". El espacio tras el guion es obligatorio.',
+        solution: 'services:\n  web:\n    image: nginx\n    volumes:\n      - ./html:/usr/share/nginx/html\n      - db_data:/var/lib/mysql',
+        xp: 100 
+      },
+      { 
+        id: 'ex_err_04', 
+        title: 'Depends_on: Lista vs Mapa', 
+        type: 'error_detect',
+        level: 2,
+        instruction: 'Se quiere usar "condition: service_healthy" pero la estructura es incorrecta:',
+        broken_yaml: 'services:\n  api:\n    image: node:20\n    depends_on:\n      - db\n        condition: service_healthy',
+        question: '¿Por qué esta estructura de "depends_on" es inválida?',
+        options: [
+          'La clave "condition" solo funciona con Redis, no con bases de datos',
+          '"depends_on" con condiciones debe ser un mapa anidado, no una lista',
+          'Falta la clave "healthcheck" en el servicio "api"',
+          'El guion "-" no puede usarse junto con claves anidadas'
+        ],
+        answer: '"depends_on" con condiciones debe ser un mapa anidado, no una lista',
+        hint: 'Para usar "condition", la sintaxis es: depends_on:\n  db:\n    condition: service_healthy',
+        solution: 'services:\n  api:\n    image: node:20\n    depends_on:\n      db:\n        condition: service_healthy',
+        xp: 110 
+      },
+      { 
+        id: 'ex_err_05', 
+        title: 'Environment: Sintaxis Mixta Prohibida', 
+        type: 'error_detect',
+        level: 2,
+        instruction: 'No se pueden mezclar formatos en la misma clave "environment":',
+        broken_yaml: 'services:\n  app:\n    image: python:3.12\n    environment:\n      - APP_ENV=production\n      DEBUG: "true"\n      - API_KEY=${API_KEY}',
+        question: '¿Qué regla de YAML se está violando en "environment"?',
+        options: [
+          'No se pueden usar variables de entorno con ${...} en Docker Compose',
+          'No se puede mezclar sintaxis de lista (- KEY=VAL) con sintaxis de mapa (KEY: VAL)',
+          'Las claves con guion bajo no son válidas en YAML',
+          'El valor "true" debe ir siempre sin comillas'
+        ],
+        answer: 'No se puede mezclar sintaxis de lista (- KEY=VAL) con sintaxis de mapa (KEY: VAL)',
+        hint: 'Elige un formato: o todo lista (- KEY=VAL) o todo mapa (KEY: VAL). No los mezcles.',
+        solution: 'services:\n  app:\n    image: python:3.12\n    environment:\n      APP_ENV: production\n      DEBUG: "true"\n      API_KEY: ${API_KEY}',
+        xp: 100 
+      },
+      { 
+        id: 'ex_err_06', 
+        title: 'El Enemigo Invisible: Tabuladores', 
+        type: 'error_detect',
+        level: 1,
+        instruction: 'Este YAML parece perfecto... pero tiene un carácter prohibido:',
+        broken_yaml: 'services:\n\tweb:\n\t\timage: nginx\n\t\tports:\n\t\t\t- "8080:80"',
+        question: '¿Qué carácter invisible está causando el error de parseo?',
+        options: [
+          'Caracteres Unicode no ASCII en los nombres de clave',
+          'Tabuladores (\\t) en lugar de espacios para la indentación',
+          'Saltos de línea estilo Windows (\\r\\n) en lugar de Unix (\\n)',
+          'Espacios finales al final de cada línea'
+        ],
+        answer: 'Tabuladores (\\t) en lugar de espacios para la indentación',
+        hint: 'YAML prohíbe explícitamente los tabuladores. Configura tu editor para usar 2 espacios.',
+        solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
+        xp: 80 
+      },
+      { 
+        id: 'ex_err_07', 
+        title: 'Version: ¿String o Número?', 
+        type: 'error_detect',
+        level: 1,
+        instruction: 'En Compose moderno "version" se omite, pero si se usa debe ser string:',
+        broken_yaml: 'version: 3.8\nservices:\n  web:\n    image: nginx',
+        question: '¿Por qué "version: 3.8" sin comillas puede causar problemas?',
+        options: [
+          'YAML lo parsea como número float 3.8, no como la cadena "3.8"',
+          'La versión 3.8 está obsoleta y Docker la rechaza',
+          'Las versiones deben ser enteros: 3, 4, 5...',
+          'No hay problema, 3.8 es válido tal cual'
+        ],
+        answer: 'YAML lo parsea como número float 3.8, no como la cadena "3.8"',
+        hint: 'Si usas "version", ponla entre comillas: "3.8". En Compose v2+ mejor omitirla totalmente.',
+        solution: '# En Compose moderno se omite "version"\nservices:\n  web:\n    image: nginx',
+        xp: 70 
+      },
+      { 
+        id: 'ex_err_08', 
+        title: 'Healthcheck: El Array Olvidado', 
+        type: 'error_detect',
+        level: 3,
+        instruction: 'El comando del healthcheck debe ser un array explícito en Docker Compose:',
+        broken_yaml: 'services:\n  web:\n    image: nginx\n    healthcheck:\n      test: curl -f http://localhost/\n      interval: 30s',
+        question: '¿Qué formato debe tener el valor de "test" en un healthcheck?',
+        options: [
+          'Debe ser un string simple con el comando completo',
+          'Debe ser un array JSON explícito: ["CMD", "curl", "-f", "url"]',
+          'Debe referenciar un script externo con "script: /ruta/check.sh"',
+          'Debe usar la sintaxis de shell: test: "bash -c \'curl -f...\'"'
+        ],
+        answer: 'Debe ser un array JSON explícito: ["CMD", "curl", "-f", "url"]',
+        hint: 'Docker Compose requiere: test: ["CMD", "ejecutable", "arg1", "arg2"] o test: ["CMD-SHELL", "comando"]',
+        solution: 'services:\n  web:\n    image: nginx\n    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost/"]\n      interval: 30s',
+        xp: 120 
+      },
+      { 
+        id: 'ex_err_09', 
+        title: 'Redes: Booleano en Mayúscula', 
+        type: 'error_detect',
+        level: 2,
+        instruction: 'La configuración de red tiene un valor booleano mal escrito:',
+        broken_yaml: 'services:\n  api:\n    image: node:20\n    networks:\n      - internal_net\n\nnetworks:\n  internal_net:\n    driver: bridge\n    internal: True',
+        question: '¿Qué valor booleano está mal escrito en la configuración de red?',
+        options: [
+          'driver: bridge debe ir en minúsculas: "bridge"',
+          'internal: True debe ser internal: true (booleano en minúscula)',
+          'El nombre de la red no puede tener guion bajo',
+          'La clave "internal" no existe en Docker Compose'
+        ],
+        answer: 'internal: True debe ser internal: true (booleano en minúscula)',
+        hint: 'En YAML, los booleanos reales van en minúscula: true/false. "True" con mayúscula puede interpretarse como string.',
+        solution: 'services:\n  api:\n    image: node:20\n    networks:\n      - internal_net\n\nnetworks:\n  internal_net:\n    driver: bridge\n    internal: true',
+        xp: 90 
+      },
+      { 
+        id: 'ex_err_10', 
+        title: 'Desafío Final: 5 Errores en 1', 
+        type: 'error_detect',
+        level: 3,
+        instruction: 'Este YAML tiene múltiples errores. Identifica el MÁS CRÍTICO que impide el parseo:',
+        broken_yaml: 'services:\nweb:\n  image:nginx:latest\n  ports:\n  -8080:80\n  environment:\n    DEBUG:yes\n  restart:Always',
+        question: '¿Cuál es el error que primero rompería el parseo de YAML?',
+        options: [
+          'La falta de espacio tras ":" en "image:nginx" y "DEBUG:yes"',
+          'Usar la etiqueta :latest en producción',
+          'El valor "Always" en restart debería ser "unless-stopped"',
+          'Falta declarar el volumen db_data al final del archivo'
+        ],
+        answer: 'La falta de espacio tras ":" en "image:nginx" y "DEBUG:yes"',
+        hint: 'En YAML, SIEMPRE debe haber un espacio después de los dos puntos: "clave: valor". Sin espacio, es error de sintaxis.',
+        solution: 'services:\n  web:\n    image: nginx:latest\n    ports:\n      - "8080:80"\n    environment:\n      DEBUG: "yes"\n    restart: unless-stopped',
+        xp: 150 
+      }
+    ],
     validacion_herramientas: [
       { 
         id: 'ex_val_01', 
@@ -940,7 +940,8 @@ const App = {
     Object.values(this.state.progress).forEach(mod => {
       totalCompleted += Object.values(mod).filter(v => v === 'completed').length;
     });
-    const totalTasks = 70;
+    // ✅ Cálculo dinámico del total de tareas
+    const totalTasks = Object.values(this.exercises).reduce((sum, mod) => sum + mod.length, 0);
     const pct = Math.min((totalCompleted / totalTasks) * 100, 100);
     
     document.querySelectorAll('.progress-fill').forEach(el => el.style.width = `${pct}%`);
@@ -1014,78 +1015,74 @@ const App = {
     container.appendChild(grid);
   },
 
-openTask(module, index) {
-  this.state.activeTaskIndex = index;
-  const ex = this.exercises[module][index];
-  const editorArea = document.getElementById('task-editor');
-  const container = document.getElementById('task-container');
-  
-  if (!editorArea) return;
+  openTask(module, index) {
+    this.state.activeTaskIndex = index;
+    const ex = this.exercises[module][index];
+    const editorArea = document.getElementById('task-editor');
+    const container = document.getElementById('task-container');
+    
+    if (!editorArea) return;
 
-  if (container) {
-    Array.from(container.children).forEach((c, i) => c.classList.toggle('active', i === index));
-  }
+    if (container) {
+      Array.from(container.children).forEach((c, i) => c.classList.toggle('active', i === index));
+    }
 
-  editorArea.classList.add('active');
-  
-  let html = `<h3>Tarea ${index + 1}: ${ex.title}</h3>`;
-  
-  if (ex.instruction) {
-    html += `<div style="background:var(--surface-alt); padding:1rem; border-radius:6px; margin-bottom:1rem; border-left:4px solid var(--primary);">
-      <strong>📝 Instrucción:</strong><br>${ex.instruction}
-    </div>`;
-  }
-
-  // 🆕 Estructura corregida: if / else if / else (mutuamente excluyentes)
-  if (ex.type === 'error_detect') {
-    // Renderizar YAML con errores + opciones de respuesta
-    html += `
-      <div class="yaml-broken" style="background:#1e1e1e;color:#f8f8f2;padding:1rem;border-radius:6px;font-family:monospace;white-space:pre;overflow-x:auto;margin:1rem 0;border-left:4px solid #ff6b6b;line-height:1.4;">
-        ${ex.broken_yaml.replace(/\n/g, '<br>')}
-      </div>
-      <p style="margin-bottom:1rem;font-weight:500;">${ex.question}</p>
-      <div class="options-grid" style="display:grid;gap:0.5rem;">
-        ${ex.options.map((opt, i) => `
-          <label class="option-card" style="padding:0.8rem;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s;">
-            <input type="radio" name="error_detect_${index}" value="${opt}" style="accent-color:var(--primary);">
-            <span>${opt}</span>
-          </label>
-        `).join('')}
-      </div>
-    `;
-  }
-  else if (ex.type === 'mcq') {
-    // Renderizar pregunta MCQ clásica
-    html += `<p style="margin-bottom:1rem; font-weight:500;">${ex.question}</p>` + 
-      ex.options.map((opt, i) => 
-        `<div style="margin:0.4rem 0"><label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;"><input type="radio" name="mcq_${index}" value="${opt}"> ${opt}</label></div>`
-      ).join('');
-  }
-  else {
-    // Renderizar editor de código para type: code, fix, cmd
-    const initialContent = '';
-    html += `
-      <div class="editor-wrap">
-        <textarea id="yaml-input" rows="10" placeholder="Escribe tu solución aquí o carga la plantilla...">${initialContent}</textarea>
+    editorArea.classList.add('active');
+    
+    let html = `<h3>Tarea ${index + 1}: ${ex.title}</h3>`;
+    
+    if (ex.instruction) {
+      html += `<div style="background:var(--surface-alt); padding:1rem; border-radius:6px; margin-bottom:1rem; border-left:4px solid var(--primary);">
+        <strong>📝 Instrucción:</strong><br>${ex.instruction}
       </div>`;
-  }
+    }
 
-  // Controles comunes (se muestran para todos los tipos)
-  html += `
-    <div class="task-controls">
-      ${ex.type !== 'mcq' && ex.type !== 'error_detect' ? '<button class="btn btn-outline" id="btn-template">📄 Cargar Plantilla</button>' : ''}
-      <button class="btn btn-outline" id="btn-hint">💡 Pista</button>
-      <button class="btn primary" id="btn-validate">✅ Validar</button>
-      <button class="btn btn-outline" id="btn-solution">👁️ Ver Respuesta</button>
-    </div>
-    <div id="hint-box" class="hint-box"></div>
-    <div id="feedback" class="feedback"></div>
-    <div id="solution-box" class="solution-box"><pre><code></code></pre></div>
-  `;
+    // ✅ Renderizado CORREGIDO para error_detect: usa <pre> para preservar indentación
+    if (ex.type === 'error_detect') {
+      html += `
+        <div class="yaml-broken" style="background:var(--code-bg);color:var(--code-text);padding:1rem;border-radius:6px;font-family:'Fira Code','Consolas',monospace;font-size:var(--font-code);line-height:1.5;margin:1rem 0;border-left:4px solid var(--error);">
+          <pre style="margin:0;white-space:pre-wrap;word-break:break-word;">${ex.broken_yaml}</pre>
+        </div>
+        <p style="margin-bottom:1rem;font-weight:500;">${ex.question}</p>
+        <div class="options-grid" style="display:grid;gap:0.5rem;">
+          ${ex.options.map((opt, i) => `
+            <label class="option-card" style="padding:0.8rem;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s;">
+              <input type="radio" name="error_detect_${index}" value="${opt}" style="accent-color:var(--primary);">
+              <span>${opt}</span>
+            </label>
+          `).join('')}
+        </div>
+      `;
+    }
+    else if (ex.type === 'mcq') {
+      html += `<p style="margin-bottom:1rem; font-weight:500;">${ex.question}</p>` + 
+        ex.options.map((opt, i) => 
+          `<div style="margin:0.4rem 0"><label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;"><input type="radio" name="mcq_${index}" value="${opt}"> ${opt}</label></div>`
+        ).join('');
+    }
+    else {
+      const initialContent = '';
+      html += `
+        <div class="editor-wrap">
+          <textarea id="yaml-input" rows="10" placeholder="Escribe tu solución aquí o carga la plantilla...">${initialContent}</textarea>
+        </div>`;
+    }
 
-  editorArea.innerHTML = html;
-  this.bindTaskButtons(module, index, ex);
-},
+    html += `
+      <div class="task-controls">
+        ${ex.type !== 'mcq' && ex.type !== 'error_detect' ? '<button class="btn btn-outline" id="btn-template">📄 Cargar Plantilla</button>' : ''}
+        <button class="btn btn-outline" id="btn-hint">💡 Pista</button>
+        <button class="btn primary" id="btn-validate">✅ Validar</button>
+        <button class="btn btn-outline" id="btn-solution">👁️ Ver Respuesta</button>
+      </div>
+      <div id="hint-box" class="hint-box"></div>
+      <div id="feedback" class="feedback"></div>
+      <div id="solution-box" class="solution-box"><pre><code></code></pre></div>
+    `;
+
+    editorArea.innerHTML = html;
+    this.bindTaskButtons(module, index, ex);
+  },
 
   bindTaskButtons(module, index, ex) {
     const editor = document.getElementById('yaml-input');
@@ -1148,10 +1145,12 @@ openTask(module, index) {
     if (!input) return false;
     const norm = input.toLowerCase();
     
+    // ✅ Validación para error_detect: comparación exacta
     if (ex.type === 'error_detect') {
       return input === ex.answer;
     }
     
+    // Validaciones básicas de YAML
     if (norm.includes('\t')) return false; 
     if (/:[a-z0-9_-]/.test(norm)) return false; 
 
@@ -1199,7 +1198,11 @@ openTask(module, index) {
   },
 
   showNotification(msg, type) {
+    // ✅ Eliminar toasts previos para evitar acumulación
+    document.querySelectorAll('[data-toast]').forEach(t => t.remove());
+    
     const toast = document.createElement('div');
+    toast.setAttribute('data-toast', 'true');
     toast.style.cssText = `position:fixed;bottom:20px;right:20px;padding:12px 20px;background:var(--${type==='success'?'success':'error'});color:white;border-radius:8px;z-index:9999;font-weight:600;animation:fadeIn 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
     toast.textContent = msg;
     document.body.appendChild(toast);

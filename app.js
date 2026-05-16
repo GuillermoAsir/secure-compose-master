@@ -147,8 +147,7 @@ const App = {
       solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
       xp: 80
     },
-  
-    { 
+      { 
       id: 'ex_err_02',
       title: 'Valores booleanos implícitos',
       type: 'error_detect',

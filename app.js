@@ -129,24 +129,25 @@ const App = {
     ],
     detectar_errores: [
       { 
-        id: 'ex_err_01', 
-        title: 'Puertos Mal Indentados', 
-        type: 'error_detect',
-        level: 1,
-        instruction: 'Identifica el error de sintaxis en este YAML:',
-        broken_yaml: 'services:\nweb:\n  image: nginx\n  ports:\n  - 8080:80',
-        question: '¿Cuál es el error principal?',
-        options: [
-          'Falta comillas en el puerto',
-          'La clave "web" no está indentada bajo "services"',
-          'La clave "ports" no lleva dos puntos',
-          'El servicio "web" no tiene imagen'
-        ],
-        answer: 'La clave "web" no está indentada bajo "services"',
-        hint: 'En YAML, los servicios deben estar indentados 2 espacios bajo "services:". web debería ser "  web".',
-        solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
-        xp: 80 
-      },
+    { 
+      id: 'ex_err_01', 
+      title: 'Puertos Mal Indentados', 
+      type: 'error_detect',
+      level: 1,
+      instruction: 'Identifica el error de sintaxis en este YAML:',
+      broken_yaml: 'services:\nweb:\n  image: nginx\n  ports:\n    - 8080:80',
+      question: '¿Cuál es el error principal?',
+      options: [
+        'Falta comillas en el puerto',
+        'La clave "web" no está indentada bajo "services"',
+        'La clave "ports" no lleva dos puntos',
+        'El servicio "web" no tiene imagen'
+      ],
+      answer: 'La clave "web" no está indentada bajo "services"',
+      hint: 'En YAML, los servicios deben estar indentados 2 espacios bajo "services:". web debería ser "  web".',
+      solution: 'services:\n  web:\n    image: nginx\n    ports:\n      - "8080:80"',
+      xp: 80 
+    }
       { 
         id: 'ex_err_02', 
         title: 'Booleanos Accidentales', 

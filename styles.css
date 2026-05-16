@@ -48,7 +48,6 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 
-/* --- HEADER & NAV --- */
 header {
   display: flex;
   justify-content: space-between;
@@ -89,7 +88,6 @@ nav a {
 }
 nav a:hover { background: var(--surface-alt); color: var(--text); }
 
-/* --- MAIN LAYOUT --- */
 main { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
 
 .tabs {
@@ -115,13 +113,10 @@ main { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
 .card h2 { margin-top: 0; color: var(--text); font-size: 1.1rem; }
 .card p, .card li { color: var(--text-muted); }
 
-/* --- EDITOR & CONTROLS --- */
 .editor-wrap { position: relative; width: 100%; }
 
-/* Estilo específico para el textarea dinámico (#yaml-input) */
 textarea#yaml-input {
   width: 100%;
-  /* En PC: Altura fija cómoda */
   height: 350px; 
   padding: 1rem;
   font-family: 'Fira Code', 'Consolas', monospace;
@@ -159,13 +154,12 @@ textarea#yaml-input:focus {
 .btn.success { background: var(--success); color: white; border-color: var(--success); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* --- FEEDBACK & HINTS --- */
 .feedback {
   margin-top: 1rem; padding: 1rem; border-radius: 8px; border-left: 4px solid transparent;
   display: none;
 }
 .feedback.show { display: block; animation: slideIn 0.3s; }
-@keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1); } }
 
 .feedback.success { background: rgba(5,150,105,0.1); border-color: var(--success); color: var(--success); }
 .feedback.error { background: rgba(220,38,38,0.1); border-color: var(--error); color: var(--error); }
@@ -173,7 +167,7 @@ textarea#yaml-input:focus {
 
 .hint-box {
   margin-top: 0.8rem; padding: 0.8rem; background: var(--surface-alt); border-radius: 6px;
-  border: 1px dashed var(--border); font-size: 0.9rem; color: var(--text-muted); display: none;
+  border: 1 dashed var(--border); font-size: 0.9rem; color: var(--text-muted); display: none;
 }
 .hint-box.show { display: block; }
 
@@ -184,7 +178,6 @@ textarea#yaml-input:focus {
 .solution-box.show { display: block; }
 .solution-box pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: monospace; }
 
-/* --- TASK GRID SYSTEM --- */
 .task-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -219,7 +212,6 @@ textarea#yaml-input:focus {
 .task-editor-area { display: none; margin-top: 1.5rem; }
 .task-editor-area.active { display: block; animation: fadeIn 0.3s; }
 
-/* --- UTILS --- */
 .modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
   display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px);
@@ -238,7 +230,6 @@ table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
 th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
 th { background: var(--surface-alt); font-weight: 600; }
 
-/* --- RESPONSIVE MOBILE --- */
 @media (max-width: 768px) {
   header { flex-direction: column; gap: 1rem; padding: 1rem; }
   .tabs { flex-wrap: nowrap; }
@@ -246,7 +237,6 @@ th { background: var(--surface-alt); font-weight: 600; }
   .btn { width: 100%; justify-content: center; }
   main { padding: 0 1rem; margin: 1rem auto; }
   
-  /* Ajuste crítico para móvil: Editor más compacto */
   textarea#yaml-input {
     height: 30vh; 
     min-height: 200px;
@@ -254,7 +244,7 @@ th { background: var(--surface-alt); font-weight: 600; }
     font-size: 12px;
   }
 }
-/* Añadir en tu <style> o CSS externo */
+
 .yaml-broken {
   position: relative;
 }
@@ -271,12 +261,25 @@ th { background: var(--surface-alt); font-weight: 600; }
   font-weight: 600;
 }
 
+.yaml-broken pre {
+  margin: 0;
+  padding: 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: var(--font-code);
+  line-height: 1.5;
+}
+
 .option-card:hover {
   border-color: var(--primary);
   background: var(--surface-alt);
+  transform: translateX(2px);
 }
 
 .option-card:has(input:checked) {
   border-color: var(--success);
   background: rgba(46, 204, 113, 0.1);
+  font-weight: 500;
 }
+
